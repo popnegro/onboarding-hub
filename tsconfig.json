@@ -20,7 +20,6 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
@@ -40,11 +39,6 @@
   "include": [
     "src",
     ".next/types/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ],
   "exclude": [
     "node_modules"
