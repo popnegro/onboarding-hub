@@ -15,22 +15,6 @@ CREATE TABLE IF NOT EXISTS clients (
   updated_at TIMESTAMP DEFAULT now()
 );
 
--- Videos de capacitación
-CREATE TABLE IF NOT EXISTS videos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  step_number INTEGER NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  url_es VARCHAR(500),
-  url_en VARCHAR(500),
-  url_pt VARCHAR(500),
-  duration_seconds INTEGER,
-  thumbnail_url VARCHAR(500),
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
 -- Pasos del onboarding (20 pasos en 4 etapas)
 CREATE TABLE IF NOT EXISTS onboarding_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,6 +30,22 @@ CREATE TABLE IF NOT EXISTS onboarding_steps (
   blocker_reason TEXT,
   video_id UUID REFERENCES videos(id),
   depends_on_step INTEGER, -- step number this depends on
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+-- Videos de capacitación
+CREATE TABLE IF NOT EXISTS videos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  step_number INTEGER NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  url_es VARCHAR(500),
+  url_en VARCHAR(500),
+  url_pt VARCHAR(500),
+  duration_seconds INTEGER,
+  thumbnail_url VARCHAR(500),
+  active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -88,14 +88,6 @@ ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE onboarding_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE adoption_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE video_sends ENABLE ROW LEVEL SECURITY;
-
--- Policies para RLS (permitir acceso a usuarios autenticados)
-CREATE POLICY "Allow all access for authenticated users" ON public.onboarding_steps
-  FOR ALL USING (auth.role() = 'authenticated');
--- FIX: Add missing policies for clients, adoption_metrics, and video_sends
-CREATE POLICY "Allow all access for authenticated users on clients" ON public.clients FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow all access for authenticated users on adoption_metrics" ON public.adoption_metrics FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow all access for authenticated users on video_sends" ON public.video_sends FOR ALL USING (auth.role() = 'authenticated');
 
 -- Insertar videos de muestra (20 videos para 20 pasos)
 INSERT INTO videos (step_number, title, description, url_es, duration_seconds)
