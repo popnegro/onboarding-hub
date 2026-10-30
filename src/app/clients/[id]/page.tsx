@@ -7,10 +7,33 @@ interface ClientDetailPageProps {
   params: { id: string }
 }
 
+function SupabaseConfigurationNotice() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+        <h1 className="text-lg font-semibold">Supabase pendiente de configuración</h1>
+        <p className="mt-2 text-sm">
+          Para consultar el onboarding, configurá NEXT_PUBLIC_SUPABASE_URL y
+          NEXT_PUBLIC_SUPABASE_ANON_KEY en el entorno de Vercel.
+        </p>
+        <Link href="/dashboard" className="mt-4 inline-block text-sm font-medium underline">
+          Volver al dashboard
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return <SupabaseConfigurationNotice />
+  }
+
   const clientId = params.id
 
-  // Fetch all data in parallel on the server
   const [clientResult, stepsResult, videosResult] = await Promise.all([
     supabase.from('clients').select('*').eq('id', clientId).single(),
     supabase.from('onboarding_steps').select('*').eq('client_id', clientId).order('step_number', { ascending: true }),
@@ -38,13 +61,12 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   }
 
   const videoMap: Record<string, Video> = {}
-  videosData?.forEach((v) => {
-    videoMap[v.id] = v
+  videosData?.forEach((video) => {
+    videoMap[video.id] = video
   })
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <Link href="/dashboard" className="flex items-center space-x-2 text-pxsol-blue hover:text-blue-700 mb-6 font-medium">
         <ChevronLeft size={20} />
         <span>Volver al dashboard</span>
