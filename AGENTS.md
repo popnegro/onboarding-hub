@@ -10,7 +10,7 @@ Prioridades: seguridad, integridad de datos, estabilidad, funcionalidad, UX/UI y
 
 - Repositorio: `popnegro/onboarding-hub`.
 - Producto: PXSOL Onboarding Hub.
-- Stack conocido: Next.js 14 App Router, TypeScript, Supabase, HubSpot y n8n. WhatsApp y correo son canales previstos, no necesariamente conectados.
+- Stack verificado en la rama candidata: Next.js 15.5.28 App Router, React 18, TypeScript, Supabase (`@supabase/ssr` y `@supabase/supabase-js`), HubSpot y n8n. WhatsApp y correo son canales previstos, no necesariamente conectados.
 - Flujo previsto: 20 pasos en cuatro etapas: Bienvenida, Configuración, Capacitación e Integraciones.
 - Convención de workflows n8n: `OH - [Name]`.
 - Separar estrictamente desarrollo, Preview/QA y producción.
