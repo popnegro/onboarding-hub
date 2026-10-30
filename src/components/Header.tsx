@@ -23,25 +23,19 @@ export default function Header() {
           </Link>
 
           {/* Desktop Menu */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8" aria-label="Navegación principal">
             <Link href="/dashboard" className="text-pxsol-gray hover:text-pxsol-dark font-medium text-sm">
               Dashboard
             </Link>
-            <Link href="/videos" className="text-pxsol-gray hover:text-pxsol-dark font-medium text-sm">
-              Videos
-            </Link>
-            <Link href="/settings" className="text-pxsol-gray hover:text-pxsol-dark font-medium text-sm">
-              Configuración
-            </Link>
           </nav>
 
-          {/* User Menu / Mobile Toggle */}
+          {/* Mobile Toggle */}
           <div className="flex items-center space-x-4">
-            <button className="hidden md:flex px-4 py-2 bg-pxsol-blue text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-              Perfil
-            </button>
-
             <button
+              type="button"
+              aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 text-pxsol-dark"
             >
@@ -52,24 +46,13 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <nav className="md:hidden pb-4 space-y-2">
+          <nav id="mobile-navigation" aria-label="Navegación móvil" className="md:hidden pb-4 space-y-2">
             <Link
               href="/dashboard"
+              onClick={() => setIsOpen(false)}
               className="block px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded"
             >
               Dashboard
-            </Link>
-            <Link
-              href="/videos"
-              className="block px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded"
-            >
-              Videos
-            </Link>
-            <Link
-              href="/settings"
-              className="block px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded"
-            >
-              Configuración
             </Link>
           </nav>
         )}
