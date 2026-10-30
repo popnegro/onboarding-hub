@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase, type OnboardingStep, type Video } from '@/lib/supabase'
+import { type OnboardingStep, type Video } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 
 export function useOnboardingSteps(clientId: string) {
   const [steps, setSteps] = useState<OnboardingStep[]>([])
@@ -11,6 +12,7 @@ export function useOnboardingSteps(clientId: string) {
     const fetchData = async () => {
       try {
         setIsLoading(true)
+        const supabase = createClient()
 
         // Fetch steps
         const { data: stepsData, error: stepsError } = await supabase
@@ -49,6 +51,7 @@ export function useOnboardingSteps(clientId: string) {
 
   const updateStep = async (stepId: string, updates: Partial<OnboardingStep>) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update(updates)
