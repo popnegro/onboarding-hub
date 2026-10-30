@@ -24,23 +24,28 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
   const [expandedEtapa, setExpandedEtapa] = useState(client.current_etapa || 1)
 
   const handleStatusChange = async (stepId: string, newStatus: OnboardingStep['status']) => {
+    const completedDate =
+      newStatus === 'completed' || newStatus === 'verified'
+        ? new Date().toISOString()
+        : null
+
     try {
       const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
-        .update({
-          status: newStatus,
-          completed_date: newStatus === 'completed' || newStatus === 'verified' ? new Date().toISOString() : null,
-        })
+        .update({ status: newStatus, completed_date: completedDate })
         .eq('id', stepId)
 
       if (error) throw error
 
       setSteps((currentSteps) =>
         currentSteps.map((step) =>
-          step.id === stepId ? { ...step, status: newStatus } : step
+          step.id === stepId
+            ? { ...step, status: newStatus, completed_date: completedDate }
+            : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar paso')
     }
@@ -61,6 +66,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
           step.id === stepId ? { ...step, notes } : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar notas')
     }
@@ -81,6 +87,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
           step.id === stepId ? { ...step, blocker_reason: blocker } : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar bloqueador')
     }
@@ -96,7 +103,6 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
         </div>
       )}
 
-      {/* No presentar métricas simuladas como mediciones reales. */}
       <section className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
         <h2 className="font-semibold text-amber-900">Monitor de adopción no disponible</h2>
         <p className="mt-1 text-sm text-amber-800">
@@ -105,7 +111,6 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
         </p>
       </section>
 
-      {/* Checklist por Etapas */}
       <div className="space-y-6">
         {etapas.map((etapa) => {
           const etapaSteps = steps.filter((step) => step.etapa === etapa)
@@ -118,8 +123,9 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
           return (
             <div key={etapa} className="border border-gray-200 rounded-lg overflow-hidden">
-              {/* Etapa Header */}
               <button
+                type="button"
+                aria-expanded={expandedEtapa === etapa}
                 onClick={() => setExpandedEtapa(expandedEtapa === etapa ? 0 : etapa)}
                 className="w-full bg-white hover:bg-pxsol-light transition p-6 flex items-center justify-between cursor-pointer"
               >
@@ -133,7 +139,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
                 </div>
                 <div className="text-right ml-4">
                   <div className="w-16 h-16 relative flex items-center justify-center">
-                    <svg className="transform -rotate-90 w-16 h-16">
+                    <svg className="transform -rotate-90 w-16 h-16" aria-hidden="true">
                       <circle cx="32" cy="32" r="28" fill="none" stroke="#e5e7eb" strokeWidth="4" />
                       <circle
                         cx="32"
@@ -151,7 +157,6 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
                 </div>
               </button>
 
-              {/* Etapa Content */}
               {expandedEtapa === etapa && (
                 <div className="border-t border-gray-200 p-6 bg-pxsol-light space-y-4">
                   {etapaSteps.map((step) => (
