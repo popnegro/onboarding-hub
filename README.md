@@ -45,11 +45,11 @@ La clave `SUPABASE_SERVICE_ROLE_KEY` nunca debe exponerse al navegador ni utiliz
 
 ### Clientes Supabase para Next.js
 
-El SDK `@supabase/supabase-js` y el adaptador `@supabase/ssr` ya están incluidos en las dependencias. El proyecto dispone de:
+El SDK `@supabase/supabase-js` y el adaptador `@supabase/ssr` ya están incluidos en las dependencias. Se eliminó el paquete obsoleto `@supabase/auth-helpers-nextjs`. El proyecto dispone de:
 
 - `src/lib/supabase/client.ts`: cliente para componentes de navegador, con sesión basada en cookies.
 - `src/lib/supabase/server.ts`: cliente por request para Server Components y handlers que puedan acceder a cookies.
-- `src/lib/supabase.ts`: cliente de compatibilidad utilizado por las pantallas actuales del MVP.
+- `src/lib/supabase.ts`: tipos de dominio compartidos; no crea clientes ni conserva sesiones.
 - `middleware.ts`: refresca la sesión de Supabase Auth y propaga cookies cuando las credenciales están configuradas; sin credenciales deja pasar la request para que la app muestre su estado de configuración pendiente.
 
 Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. El middleware ya refresca las sesiones y propaga cookies cuando Supabase está configurado. El flujo de login/logout, la protección de rutas y el modelo de roles/políticas RLS siguen pendientes.
