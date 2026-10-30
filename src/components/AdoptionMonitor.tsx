@@ -91,7 +91,7 @@ export default function AdoptionMonitor({ metric }: AdoptionMonitorProps) {
             <span>Recomendaciones</span>
           </h4>
           <ul className="text-sm text-pxsol-dark space-y-1 list-disc list-inside">
-            {metric.reservations_7d === 0 && <li>Enviar video: "Cómo crear tu primera reserva"</li>}
+            {metric.reservations_7d === 0 && <li>Enviar video: Cómo crear tu primera reserva</li>}
             {metric.active_users < 2 && <li>Contactar al cliente para verificar acceso</li>}
             {!metric.rates_updated && <li>Revisar Paso 6: Configuración de tarifas</li>}
             {metric.reports_generated === 0 && <li>Hacer demo de reportes en próxima sesión</li>}
