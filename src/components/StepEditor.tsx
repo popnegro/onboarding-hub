@@ -54,8 +54,10 @@ export default function StepEditor({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-pxsol-blue transition">
-      <div
-        className="p-4 cursor-pointer flex items-center justify-between hover:bg-pxsol-light transition"
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        className="w-full text-left p-4 cursor-pointer flex items-center justify-between hover:bg-pxsol-light transition"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1">
@@ -73,7 +75,7 @@ export default function StepEditor({
             className={`text-pxsol-gray transition ${isExpanded ? 'rotate-180' : ''}`}
           />
         </div>
-      </div>
+      </button>
 
       {isExpanded && (
         <div className="border-t border-gray-200 p-4 space-y-4">
