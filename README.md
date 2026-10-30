@@ -17,8 +17,8 @@ Los datos de demostración y las URLs de ejemplo no son datos productivos. El es
 
 ## Requisitos previos
 
-- Node.js 18+
-- npm
+- Node.js 22.23+ (verificado también con Node 26.0.0)
+- npm 10+
 - Proyecto Supabase
 - Proyecto Vercel
 
