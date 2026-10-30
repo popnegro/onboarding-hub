@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase, type Client } from '@/lib/supabase'
+import { type Client } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import ClientCard from '@/components/ClientCard'
 import { Plus } from 'lucide-react'
 
@@ -15,6 +16,7 @@ export default function DashboardPage() {
     const fetchClients = async () => {
       try {
         setIsLoading(true)
+        const supabase = createClient()
         let query = supabase.from('clients').select('*')
 
         if (filter !== 'all') {
