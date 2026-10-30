@@ -38,7 +38,9 @@ Crear un proyecto en [Supabase](https://supabase.com) y configurar las variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+# Alternativa legacy si el proyecto todavía usa anon keys:
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 La clave `SUPABASE_SERVICE_ROLE_KEY` nunca debe exponerse al navegador ni utilizarse como variable `NEXT_PUBLIC_*`. No se necesita para compilar la aplicación.
@@ -73,13 +75,15 @@ npm run dev
 
 Abrir `http://localhost:3000`.
 
+La aplicación acepta la Publishable key actual o, como alternativa, la legacy anon key. El valor de ambas debe pertenecer al mismo proyecto Supabase. Ver [docs/supabase-setup.md](docs/supabase-setup.md) para provisión, autorización y validación segura.
+
 ## Deployment en Vercel
 
 Configurar las siguientes variables en los entornos que correspondan:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (preferida) o NEXT_PUBLIC_SUPABASE_ANON_KEY (legacy)
 ```
 
 No configurar claves ficticias. La aplicación permite compilar sin las variables, pero las consultas a Supabase mostrarán un error explícito hasta completar la configuración.

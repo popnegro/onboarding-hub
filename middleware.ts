@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getSupabasePublicConfig } from './src/lib/supabase/config'
 
 /**
  * Refreshes Supabase Auth cookies for each matched request.
@@ -7,18 +8,21 @@ import { NextResponse, type NextRequest } from 'next/server'
  * until the application's user roles and access policies are defined.
  */
 export async function middleware(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const config = getSupabasePublicConfig({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
 
   // Keep the application usable in local/preview environments before the
   // Supabase project has been provisioned and its public keys configured.
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!config) {
     return NextResponse.next({ request })
   }
 
   let response = NextResponse.next({ request })
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient(config.url, config.key, {
     cookies: {
       getAll() {
         return request.cookies.getAll()
