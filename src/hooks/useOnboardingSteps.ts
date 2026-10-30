@@ -9,12 +9,14 @@ export function useOnboardingSteps(clientId: string) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let isActive = true
+
     const fetchData = async () => {
       try {
         setIsLoading(true)
+        setError(null)
         const supabase = createClient()
 
-        // Fetch steps
         const { data: stepsData, error: stepsError } = await supabase
           .from('onboarding_steps')
           .select('*')
@@ -22,31 +24,35 @@ export function useOnboardingSteps(clientId: string) {
           .order('step_number', { ascending: true })
 
         if (stepsError) throw stepsError
-
+        if (!isActive) return
         setSteps(stepsData || [])
 
-        // Fetch videos
         const { data: videosData, error: videosError } = await supabase
           .from('videos')
           .select('*')
 
         if (videosError) throw videosError
+        if (!isActive) return
 
         const videoMap: Record<string, Video> = {}
-        videosData?.forEach((v) => {
-          videoMap[v.id] = v
+        videosData?.forEach((video) => {
+          videoMap[video.id] = video
         })
         setVideos(videoMap)
-
-        setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar datos')
+        if (isActive) {
+          setError(err instanceof Error ? err.message : 'Error al cargar datos')
+        }
       } finally {
-        setIsLoading(false)
+        if (isActive) setIsLoading(false)
       }
     }
 
-    fetchData()
+    void fetchData()
+
+    return () => {
+      isActive = false
+    }
   }, [clientId])
 
   const updateStep = async (stepId: string, updates: Partial<OnboardingStep>) => {
@@ -59,11 +65,12 @@ export function useOnboardingSteps(clientId: string) {
 
       if (error) throw error
 
-      setSteps(
-        steps.map((s) =>
-          s.id === stepId ? { ...s, ...updates } : s
+      setSteps((currentSteps) =>
+        currentSteps.map((step) =>
+          step.id === stepId ? { ...step, ...updates } : step
         )
       )
+      setError(null)
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar paso')
