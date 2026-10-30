@@ -74,7 +74,7 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {!isLoading && !error && (\n      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <p className="text-sm text-pxsol-gray font-medium">Clientes Activos</p>
           <p className="text-3xl font-bold text-pxsol-dark mt-2">{activeClients.length}</p>
@@ -90,7 +90,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="mb-6 flex gap-2">
+      )}\n\n      <div className="mb-6 flex gap-2">
         {(['all', 'active', 'completed'] as const).map((currentFilter) => (
           <button
             key={currentFilter}
