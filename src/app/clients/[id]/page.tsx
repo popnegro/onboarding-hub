@@ -1,4 +1,5 @@
-import { supabase, type Video } from '@/lib/supabase'
+import { type Video } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import ClientPageContent from './ClientPageContent'
@@ -33,6 +34,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   }
 
   const clientId = params.id
+  const supabase = await createClient()
 
   const [clientResult, stepsResult, videosResult] = await Promise.all([
     supabase.from('clients').select('*').eq('id', clientId).single(),
