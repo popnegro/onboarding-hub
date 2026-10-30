@@ -54,7 +54,6 @@ export default function StepEditor({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-pxsol-blue transition">
-      {/* Header */}
       <div
         className="p-4 cursor-pointer flex items-center justify-between hover:bg-pxsol-light transition"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -76,34 +75,30 @@ export default function StepEditor({
         </div>
       </div>
 
-      {/* Expanded Content */}
       {isExpanded && (
         <div className="border-t border-gray-200 p-4 space-y-4">
-          {/* Description */}
           {step.description && (
             <div>
               <p className="text-sm text-pxsol-gray">{step.description}</p>
             </div>
           )}
 
-          {/* Video Link */}
           {videoTitle && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center space-x-3">
               <Play size={18} className="text-pxsol-blue flex-shrink-0" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-pxsol-dark">{videoTitle}</p>
                 <p className="text-xs text-pxsol-gray">Video asociado al paso</p>
               </div>
-              <button className="ml-auto px-3 py-1 bg-pxsol-blue text-white rounded text-xs font-medium hover:bg-blue-700 transition">
-                Enviar
-              </button>
+              <span className="ml-auto shrink-0 rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                Envío no configurado
+              </span>
             </div>
           )}
 
-          {/* Status Selector */}
           <div>
             <label className="block text-sm font-medium text-pxsol-dark mb-2">Estado</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(['not_started', 'in_progress', 'completed', 'verified'] as const).map((status) => (
                 <button
                   key={status}
@@ -121,7 +116,6 @@ export default function StepEditor({
             </div>
           </div>
 
-          {/* Blocker Input */}
           <div>
             <button
               onClick={() => setShowBlockerInput(!showBlockerInput)}
@@ -135,7 +129,7 @@ export default function StepEditor({
                 <input
                   type="text"
                   value={blocker}
-                  onChange={(e) => setBlocker(e.target.value)}
+                  onChange={(event) => setBlocker(event.target.value)}
                   placeholder="Ej: Esperando datos del cliente..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pxsol-blue"
                   disabled={isLoading}
@@ -151,13 +145,12 @@ export default function StepEditor({
             )}
           </div>
 
-          {/* Notes Input */}
           <div>
             <label className="block text-sm font-medium text-pxsol-dark mb-2">Notas Internas</label>
             <div className="space-y-2">
               <textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(event) => setNotes(event.target.value)}
                 placeholder="Agregar notas sobre el progreso..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pxsol-blue resize-none"
                 rows={3}
@@ -173,7 +166,6 @@ export default function StepEditor({
             </div>
           </div>
 
-          {/* Dates */}
           {step.estimated_date && (
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
@@ -183,7 +175,9 @@ export default function StepEditor({
               {step.completed_date && (
                 <div>
                   <p className="font-medium text-pxsol-gray">Completado</p>
-                  <p className="text-green-600 font-semibold">{new Date(step.completed_date).toLocaleDateString()}</p>
+                  <p className="text-green-600 font-semibold">
+                    {new Date(step.completed_date).toLocaleDateString()}
+                  </p>
                 </div>
               )}
             </div>
