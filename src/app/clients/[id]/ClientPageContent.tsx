@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase, type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import StepEditor from '@/components/StepEditor'
 
 const ETAPA_LABELS: Record<number, string> = {
@@ -24,6 +25,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
   const handleStatusChange = async (stepId: string, newStatus: OnboardingStep['status']) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update({
@@ -46,6 +48,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
   const handleNotesChange = async (stepId: string, notes: string) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update({ notes })
@@ -65,6 +68,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
   const handleBlockerChange = async (stepId: string, blocker: string | null) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update({ blocker_reason: blocker })
