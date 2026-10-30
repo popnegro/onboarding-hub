@@ -13,9 +13,12 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
 
   useEffect(() => {
+    let isActive = true
+
     const fetchClients = async () => {
       try {
         setIsLoading(true)
+        setError(null)
         const supabase = createClient()
         let query = supabase.from('clients').select('*')
 
@@ -28,16 +31,21 @@ export default function DashboardPage() {
         })
 
         if (err) throw err
-        setClients(data || [])
-        setError(null)
+        if (isActive) setClients(data || [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        if (isActive) {
+          setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        }
       } finally {
-        setIsLoading(false)
+        if (isActive) setIsLoading(false)
       }
     }
 
-    fetchClients()
+    void fetchClients()
+
+    return () => {
+      isActive = false
+    }
   }, [filter])
 
   const activeClients = clients.filter((client) => client.status === 'active')
