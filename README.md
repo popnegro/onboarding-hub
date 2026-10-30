@@ -52,7 +52,7 @@ El SDK `@supabase/supabase-js` y el adaptador `@supabase/ssr` ya están incluido
 - `src/lib/supabase.ts`: cliente de compatibilidad utilizado por las pantallas actuales del MVP.
 - `middleware.ts`: refresca la sesión de Supabase Auth y propaga cookies cuando las credenciales están configuradas; sin credenciales deja pasar la request para que la app muestre su estado de configuración pendiente.
 
-Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. La autenticación y el refresco de sesión mediante middleware quedan pendientes de implementar junto con el modelo de roles y políticas RLS.
+Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. El middleware ya refresca las sesiones y propaga cookies cuando Supabase está configurado. El flujo de login/logout, la protección de rutas y el modelo de roles/políticas RLS siguen pendientes.
 
 ### 3. Crear las tablas
 
