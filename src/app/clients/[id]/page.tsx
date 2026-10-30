@@ -5,7 +5,7 @@ import Link from 'next/link'
 import ClientPageContent from './ClientPageContent'
 
 interface ClientDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 function SupabaseConfigurationNotice() {
@@ -33,7 +33,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
     return <SupabaseConfigurationNotice />
   }
 
-  const clientId = params.id
+  const { id: clientId } = await params
   const supabase = await createClient()
 
   const [clientResult, stepsResult, videosResult] = await Promise.all([
