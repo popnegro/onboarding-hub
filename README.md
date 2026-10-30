@@ -43,6 +43,16 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 La clave `SUPABASE_SERVICE_ROLE_KEY` nunca debe exponerse al navegador ni utilizarse como variable `NEXT_PUBLIC_*`. No se necesita para compilar la aplicación.
 
+### Clientes Supabase para Next.js
+
+El SDK `@supabase/supabase-js` y el adaptador `@supabase/ssr` ya están incluidos en las dependencias. El proyecto dispone de:
+
+- `src/lib/supabase/client.ts`: cliente para componentes de navegador, con sesión basada en cookies.
+- `src/lib/supabase/server.ts`: cliente por request para Server Components y handlers que puedan acceder a cookies.
+- `src/lib/supabase.ts`: cliente de compatibilidad utilizado por las pantallas actuales del MVP.
+
+Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. La autenticación y el refresco de sesión mediante middleware quedan pendientes de implementar junto con el modelo de roles y políticas RLS.
+
 ### 3. Crear las tablas
 
 Ejecutar `schema.sql` desde el SQL Editor de Supabase en una instalación nueva.
