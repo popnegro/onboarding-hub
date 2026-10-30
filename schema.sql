@@ -93,6 +93,7 @@ CREATE INDEX IF NOT EXISTS idx_video_sends_client ON video_sends(client_id);
 
 -- RLS permanece habilitado. Sin políticas explícitas, el acceso vía anon key
 -- queda denegado por defecto. Definir políticas según roles antes de producción.
+ALTER TABLE videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE onboarding_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE adoption_metrics ENABLE ROW LEVEL SECURITY;
