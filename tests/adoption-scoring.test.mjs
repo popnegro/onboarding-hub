@@ -65,10 +65,22 @@ test('calculateAdoptionScore caps signals above their target', () => {
   )
 })
 
-test('getRiskLevel preserves the documented score boundaries', () => {
-  assert.equal(getRiskLevel(70), 'alto')
+test('getRiskLevel represents actual churn risk, not adoption score bands', () => {
+  assert.equal(getRiskLevel(100), 'bajo')
+  assert.equal(getRiskLevel(70), 'bajo')
+  assert.equal(getRiskLevel(69), 'medio')
   assert.equal(getRiskLevel(40), 'medio')
-  assert.equal(getRiskLevel(39), 'bajo')
+  assert.equal(getRiskLevel(39), 'alto')
+  assert.equal(getRiskLevel(0), 'alto')
+})
+
+test('calculateAdoptionScore never returns a negative score for invalid negative counters', () => {
+  assert.equal(calculateAdoptionScore(metric({
+    reservations_7d: -10,
+    active_users: -2,
+    reports_generated: -1,
+    integrations_active: -3,
+  })), 0)
 })
 
 test('getScoreColor maps high, medium and low scores to their status colors', () => {
