@@ -25,7 +25,7 @@ Revisión estática de `schema.sql`, `middleware.ts`, clientes Supabase, hooks d
 
 La función `getRiskLevel` asignaba `alto` a scores de adopción >=70 y `bajo` a scores <40, aunque el campo persistido se llama `risk_level` y la documentación de negocio define esos mismos rangos como On Track y Churn Risk, respectivamente. Esa inversión podía etiquetar clientes saludables como riesgo alto y clientes críticos como riesgo bajo en integraciones o automatizaciones futuras.
 
-Corrección aplicada en la rama candidata:
+Corrección aplicada en la rama candidata (`src/lib/adoption-scoring.ts`, `src/components/AdoptionMonitor.tsx` y `tests/adoption-scoring.test.mjs`):
 - Score >=70 → riesgo `bajo`.
 - Score 40–69 → riesgo `medio`.
 - Score <40 o score no finito → riesgo `alto`.
