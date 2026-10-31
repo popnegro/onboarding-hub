@@ -2,7 +2,8 @@
 
 **Fecha:** 31/10/2026  
 **Rama auditada:** `fix/vercel-build-supabase-types`  
-**HEAD auditado:** `c91b240eb41f1efc6816f726d290946d6ecf5fdf`
+**HEAD de referencia original:** `c91b240eb41f1efc6816f726d290946d6ecf5fdf`  
+**Actualización:** 31/10/2026 — corrección de semántica de riesgo y normalización defensiva en `src/lib/adoption-scoring.ts`.
 
 ## Alcance y límites
 
@@ -19,6 +20,18 @@ Revisión estática de `schema.sql`, `middleware.ts`, clientes Supabase, hooks d
 5. **Las rutas `/dashboard` y `/clients/[id]` no están protegidas por autenticación de aplicación.** La protección SSO observada corresponde al Preview de Vercel, no sustituye la autorización de la aplicación.
 
 **Decisión de seguridad:** no abrir políticas generales, no agregar `USING (true)`, no habilitar escritura con anon/publishable key y no exponer datos reales en Preview/Production antes de resolver estos puntos.
+
+### P1 — Semántica del nivel de riesgo de adopción
+
+La función `getRiskLevel` asignaba `alto` a scores de adopción >=70 y `bajo` a scores <40, aunque el campo persistido se llama `risk_level` y la documentación de negocio define esos mismos rangos como On Track y Churn Risk, respectivamente. Esa inversión podía etiquetar clientes saludables como riesgo alto y clientes críticos como riesgo bajo en integraciones o automatizaciones futuras.
+
+Corrección aplicada en la rama candidata:
+- Score >=70 → riesgo `bajo`.
+- Score 40–69 → riesgo `medio`.
+- Score <40 o score no finito → riesgo `alto`.
+- Las señales numéricas negativas o no finitas ahora aportan 0 al score; los valores superiores al objetivo siguen limitados a 100.
+
+Los umbrales y ponderaciones existentes se conservaron; no se validaron contra datos reales ni se presentan como reglas comerciales aprobadas.
 
 ### P1 — Integridad del modelo de datos
 
