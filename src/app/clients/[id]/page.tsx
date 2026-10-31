@@ -1,4 +1,5 @@
 import { type Video } from '@/lib/supabase'
+import { getSupabasePublicConfig } from '@/lib/supabase/config'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -14,8 +15,8 @@ function SupabaseConfigurationNotice() {
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
         <h1 className="text-lg font-semibold">Supabase pendiente de configuración</h1>
         <p className="mt-2 text-sm">
-          Para consultar el onboarding, configurá NEXT_PUBLIC_SUPABASE_URL y
-          NEXT_PUBLIC_SUPABASE_ANON_KEY en el entorno de Vercel.
+          Para consultar el onboarding, configurá NEXT_PUBLIC_SUPABASE_URL y una clave pública:
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY o NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.
         </p>
         <Link href="/dashboard" className="mt-4 inline-block text-sm font-medium underline">
           Volver al dashboard
@@ -26,10 +27,13 @@ function SupabaseConfigurationNotice() {
 }
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseConfig = getSupabasePublicConfig({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseConfig) {
     return <SupabaseConfigurationNotice />
   }
 
