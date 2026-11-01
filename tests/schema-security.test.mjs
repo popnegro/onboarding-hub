@@ -36,7 +36,7 @@ test('seeds one clearly fictional client and all 20 approved editorial steps ide
   const seededTitles = seedValues.split('\n').map((line) => {
     const match = line.trim().match(/^\(\d+,\s*\d+,\s*'(.+)'\),?$/)
     return match?.[1].replaceAll("''", "'")
-  }).filter((title): title is string => Boolean(title))
+  }).filter(Boolean)
   assert.deepEqual(seededTitles, library.videos.map((video) => video.title))
 })
 
