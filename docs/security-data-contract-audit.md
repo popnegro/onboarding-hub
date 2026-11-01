@@ -1,94 +1,78 @@
 # Auditoría de contrato de datos y autorización — PXSOL Onboarding Hub
 
-**Fecha:** 31/10/2026  
+**Fecha de actualización:** 01/11/2026  
 **Rama:** `fix/vercel-build-supabase-types`  
-**Alcance:** demo interno para postulación laboral; no hay acceso de clientes hoteleros.
+**Alcance:** demo de herramienta interna para postulación laboral; sin acceso de clientes hoteleros. Los datos de presentación deben ser ficticios.
 
 ## Decisión de producto
 
-Onboarding Hub es una herramienta de uso interno del equipo PXSOL que se presenta como demo. No requiere multi-tenancy, roles de clientes finales ni aislamiento por hotel. El acceso previsto es para cuentas internas creadas manualmente en Supabase Auth. Los datos de presentación deben ser ficticios.
+- Solo cuentas internas provisionadas manualmente en Supabase Auth.
+- Signup público deshabilitado: **PASS manual confirmado por el usuario el 01/11/2026**.
+- Login/logout reales con la cuenta QA: **PASS manual confirmado por el usuario el 01/11/2026**.
+- No es un SaaS multi-tenant y no admite usuarios hoteleros.
+- HubSpot, PMS, WhatsApp, email y n8n permanecen desconectados; no se envían comunicaciones ni se activan workflows.
 
-## Estado P0 — Autenticación y acceso
+## Estado de autenticación y rutas
 
-### Implementado en código
-- Login email/contraseña con Supabase Auth en `/login`.
-- Logout en navegación desktop y mobile.
-- Middleware ubicado en `src/middleware.ts`, junto al App Router.
-- `auth.getUser()` valida identidad; `/dashboard` y `/clients/*` redirigen a login si no hay usuario.
-- Fail-closed cuando faltan variables Supabase.
+### Implementado y validado
+- Login email/contraseña en `/login`.
+- Logout desktop y mobile.
+- Middleware en `src/middleware.ts` con validación server-side mediante `auth.getUser()`.
+- `/dashboard` y `/clients/*` redirigen a login sin sesión.
+- Fail-closed si faltan variables Supabase.
 - Redirect post-login restringido a rutas internas.
-- Smoke test local sin configuración Supabase: dashboard y ficha responden 307 a login; login responde 200.
+- Tests automatizados de redirect y smoke test local.
+- El usuario confirmó prueba real de login y logout.
+- El usuario confirmó que el signup público está deshabilitado. No se obtuvo una lectura automatizada independiente del ajuste `disable_signup`.
 
-### Pendiente de configuración y validación real
-- Desactivar registro público en Supabase Auth.
-- Crear/invitar manualmente las cuentas internas.
-- Inspeccionar esquema y policies actuales del proyecto Supabase.
-- Aplicar la migración interna solo después de verificar que no hay policies existentes.
-- Probar login/logout, refresh y lecturas/escrituras con una cuenta interna real.
-- Verificar en Preview el redirect anónimo con el middleware compilado.
+### Pendientes de configuración y validación
+- QA visual desktop/mobile en Preview; el deployment requiere Vercel SSO. No se creó un bypass ni se alteró Deployment Protection.
+- Activar Leaked Password Protection en Supabase Auth. Security Advisor reporta `auth_leaked_password_protection` como WARN.
+- Repetir comprobación independiente de `disable_signup` cuando exista acceso soportado a Auth settings; no hay herramienta MCP de configuración Auth disponible.
 
-### Migración RLS preparada, no ejecutada
+## Estado real de base de datos (01/11/2026)
 
-Archivo: `supabase/migrations/20261031_internal_demo_access.sql`.
+Auditoría de solo lectura del proyecto `paycbzwufbviyplxjooc`:
+- Tablas en schema `public`: **0**.
+- Migraciones registradas: **0**.
+- Policies RLS: no hay tablas públicas sobre las que definir policies.
+- Security Advisor: 1 warning por Leaked Password Protection deshabilitada.
+- Performance Advisor: 0 findings.
 
-La migración:
-- Aborta si detecta cualquier policy existente en las cinco tablas objetivo.
-- Habilita RLS.
-- Revoca privilegios de `anon`.
-- Concede CRUD al rol `authenticated` y crea políticas para usuarios autenticados.
+**Conclusión:** autenticación funciona, pero el esquema de datos todavía no está desplegado. No presentar el backend de clientes/onboarding como operativo.
 
-**Límite explícito:** todos los usuarios autenticados comparten permisos operativos sobre los datos del demo. Esto solo es aceptable si el alta pública está desactivada y las cuentas son provisionadas manualmente. No es un diseño multi-tenant ni un modelo de roles. No ejecutar sin inspeccionar la base real.
+## Migración candidata
 
-Los hooks actuales actualizan pasos desde el navegador. La seguridad de estas operaciones depende de que RLS esté correctamente aplicada; no habilitar consultas reales antes de la migración validada.
+`supabase/migrations/20261031_internal_demo_access.sql` ahora contiene la creación inicial de las cinco tablas, índices, RLS, revocación de `anon`, permisos CRUD para `authenticated` y policies internas.
 
-## P1 — Semántica del nivel de riesgo de adopción
+Tablas: `videos`, `clients`, `onboarding_steps`, `adoption_metrics`, `video_sends`.
 
-La función `getRiskLevel` asignaba riesgo alto a scores >=70 y bajo a scores <40, invirtiendo el sentido de los rangos de adopción.
+La policy concede acceso compartido a cualquier cuenta autenticada. Solo es aceptable para esta demo interna porque el signup está deshabilitado y las cuentas se provisionan manualmente. No es un diseño multi-tenant ni un modelo de roles.
 
-Corrección aplicada en `src/lib/adoption-scoring.ts`, `src/components/AdoptionMonitor.tsx` y tests:
-- Score >=70 → riesgo `bajo`.
-- Score 40–69 → riesgo `medio`.
-- Score <40 o no finito → riesgo `alto`.
-- Señales negativas o no finitas aportan 0; valores por encima del objetivo se limitan a 100.
+**No se aplicó la migración al proyecto Supabase.** La base real sigue vacía. Aplicarla es un cambio de esquema en el backend conectado y requiere validación humana antes de ejecutar. La migración debe revisarse y probarse en un entorno no productivo antes de aplicarla al proyecto compartido.
 
-Los pesos y umbrales no fueron validados con datos reales ni aprobados como reglas comerciales.
+## Riesgos y límites pendientes
 
-## P1 — Integridad del modelo de datos
+- El esquema no formaliza todos los rangos y enumeraciones de negocio (pasos 1–20, etapas 1–4, status, métricas, scores).
+- No hay trigger para mantener `updated_at`.
+- No existe validación de `depends_on_step` ni detección de ciclos.
+- Los pesos y umbrales de adoption scoring no se validaron con datos reales ni se aprobaron como reglas comerciales.
+- No hay ingestión PMS verificada; no presentar scores ficticios como métricas reales.
+- Las variables Vercel `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_SECRET_KEY` aparecieron en el inventario de integración; no se descifraron, usaron ni modificaron. El código de aplicación revisado no las referencia.
 
-El esquema base no formaliza:
-- Rango 1–20 de `onboarding_steps.step_number`.
-- Rango 1–4 de `onboarding_steps.etapa` ni relación declarativa entre paso y etapa.
-- Valores permitidos de status mediante CHECK/ENUM.
-- Rangos para `progress_percentage`, `adoption_score` y contadores.
-- Unicidad de métricas por cliente/fecha.
-- Unicidad/versionado de videos por número de paso.
-- FK/rango/ciclos para `depends_on_step`.
-- Trigger para mantener `updated_at`.
-- Convención temporal explícita para timestamps con zona.
+## Validación consolidada
 
-No agregar constraints sin inspeccionar datos existentes: pueden rechazar o alterar registros.
-
-## P1 — Integraciones y datos
-
-- HubSpot, PMS, WhatsApp, email y n8n permanecen fuera del alcance operativo del demo.
-- No hay ingestión de métricas PMS verificada.
-- No mostrar scores ficticios como indicadores reales de adopción/churn.
-- No enviar comunicaciones ni activar workflows.
-- No incluir datos personales o comerciales reales en fixtures, logs o capturas.
-
-## Validación
-
-- [x] Decisión de producto interna, sin acceso de clientes finales.
-- [x] Login/logout y middleware implementados.
-- [x] Middleware incluido en el manifest de build.
-- [x] Tests 30/30, lint, TypeScript y build PASS en sandbox aislado.
-- [x] Smoke test local de rutas privadas sin Supabase.
-- [ ] Deployment Preview final READY y smoke test remoto.
-- [ ] Registro público de Supabase Auth desactivado.
-- [ ] Esquema y policies reales inspeccionados.
-- [ ] Migración RLS aplicada y validada en entorno demo.
-- [ ] Cuenta interna real probada.
+- [x] Tests automatizados 30/30 en HEAD de código auditado previamente.
+- [x] Lint, TypeScript y build PASS en HEAD de código auditado previamente.
+- [x] Deployment Preview READY para HEAD `2379d24d50fa8d4bce6ccf53789e80aed3957859`.
+- [x] Login/logout real PASS (confirmación manual del usuario).
+- [x] Signup público deshabilitado PASS (confirmación manual del usuario).
+- [x] Rutas privadas protegidas sin sesión.
+- [ ] Repetir tests/build en el nuevo commit de migración.
 - [ ] QA visual desktop/mobile.
-- [ ] Fixtures ficticios identificados como demo.
+- [ ] Leaked Password Protection habilitada.
+- [ ] Migración aplicada en entorno de prueba y pruebas RLS anon/authenticated.
+- [ ] HUMAN GATE antes de aplicar DDL al proyecto Supabase compartido.
+- [ ] Verificar lecturas/escrituras reales con cuenta interna después de la migración.
 
-**Conclusión:** el flujo de autenticación está implementado en código, pero el backend sigue BLOCKED hasta configurar Supabase Auth, inspeccionar policies y validar una cuenta interna real. No ejecutar `schema.sql` sobre una base existente ni aplicar la migración sin auditoría previa.
+**Estado:** aplicación web y autenticación validadas; backend de datos bloqueado hasta revisar/aprobar y aplicar la migración inicial.
