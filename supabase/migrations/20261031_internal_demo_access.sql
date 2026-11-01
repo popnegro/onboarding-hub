@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgcrypto;
 
-create table if not exists public.videos (
+create table public.videos (
   id uuid primary key default gen_random_uuid(),
   step_number integer not null,
   title varchar(255) not null,
@@ -20,7 +20,7 @@ create table if not exists public.videos (
   updated_at timestamp default now()
 );
 
-create table if not exists public.clients (
+create table public.clients (
   id uuid primary key default gen_random_uuid(),
   hubspot_deal_id varchar(50) unique,
   name varchar(255) not null,
@@ -34,7 +34,7 @@ create table if not exists public.clients (
   updated_at timestamp default now()
 );
 
-create table if not exists public.onboarding_steps (
+create table public.onboarding_steps (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null references public.clients(id) on delete cascade,
   step_number integer not null,
@@ -53,7 +53,7 @@ create table if not exists public.onboarding_steps (
   constraint onboarding_steps_client_step_unique unique (client_id, step_number)
 );
 
-create table if not exists public.adoption_metrics (
+create table public.adoption_metrics (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null references public.clients(id) on delete cascade,
   measurement_date date not null,
@@ -67,7 +67,7 @@ create table if not exists public.adoption_metrics (
   created_at timestamp default now()
 );
 
-create table if not exists public.video_sends (
+create table public.video_sends (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null references public.clients(id) on delete cascade,
   video_id uuid not null references public.videos(id),
@@ -77,12 +77,12 @@ create table if not exists public.video_sends (
   clicked_at timestamp
 );
 
-create index if not exists idx_clients_onboarder on public.clients(assigned_onboarder_id);
-create index if not exists idx_steps_client on public.onboarding_steps(client_id);
-create index if not exists idx_steps_status on public.onboarding_steps(status);
-create index if not exists idx_adoption_client on public.adoption_metrics(client_id);
-create index if not exists idx_adoption_date on public.adoption_metrics(measurement_date);
-create index if not exists idx_video_sends_client on public.video_sends(client_id);
+create index idx_clients_onboarder on public.clients(assigned_onboarder_id);
+create index idx_steps_client on public.onboarding_steps(client_id);
+create index idx_steps_status on public.onboarding_steps(status);
+create index idx_adoption_client on public.adoption_metrics(client_id);
+create index idx_adoption_date on public.adoption_metrics(measurement_date);
+create index idx_video_sends_client on public.video_sends(client_id);
 
 do $$
 declare
