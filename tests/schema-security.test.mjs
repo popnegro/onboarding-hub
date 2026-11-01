@@ -22,8 +22,8 @@ test('initial migration creates all application tables before applying access po
     assert.match(migration, new RegExp('CREATE POLICY internal_authenticated_all_' + table, 'i'))
   }
   assert.ok(migration.indexOf('CREATE TABLE IF NOT EXISTS public.videos') < migration.indexOf('CREATE POLICY'))
-  assert.match(migration, /REVOKE ALL ON TABLE[\\s\\S]+FROM anon/i)
-  assert.match(migration, /GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE[\\s\\S]+TO authenticated/i)
+  assert.match(migration, /REVOKE ALL ON TABLE[\s\S]+FROM anon/i)
+  assert.match(migration, /GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE[\s\S]+TO authenticated/i)
 })
 
 test('reference schema keeps default-deny posture until the internal access migration is applied', () => {
