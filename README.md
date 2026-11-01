@@ -13,7 +13,7 @@ Herramienta interna para gestión centralizada de onboarding de clientes hoteler
 
 El repositorio contiene la estructura inicial del MVP. HubSpot, PMS, email y WhatsApp no deben considerarse conectados hasta que sus credenciales, endpoints y pruebas estén configurados.
 
-Los datos de demostración y las URLs de ejemplo no son datos productivos. El esquema base no inserta clientes, videos ni métricas ficticias. No activar comunicaciones ni alertas sobre datos de demostración.
+El repositorio se presenta como demo de uso interno para una postulación laboral. No es un portal para clientes hoteleros. Los datos de presentación deben ser ficticios y no se activan comunicaciones ni integraciones externas.
 
 ## Requisitos previos
 
@@ -54,7 +54,7 @@ El SDK `@supabase/supabase-js` y el adaptador `@supabase/ssr` ya están incluido
 - `src/lib/supabase.ts`: tipos de dominio compartidos; no crea clientes ni conserva sesiones.
 - `middleware.ts`: refresca la sesión de Supabase Auth y propaga cookies cuando las credenciales están configuradas; sin credenciales deja pasar la request para que la app muestre su estado de configuración pendiente.
 
-Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. El middleware ya refresca las sesiones y propaga cookies cuando Supabase está configurado. El flujo de login/logout, la protección de rutas y el modelo de roles/políticas RLS siguen pendientes.
+Usá el helper de navegador desde componentes con `'use client'` y el helper de servidor desde módulos server-only. No importes el cliente de servidor en componentes cliente. El middleware ya refresca las sesiones y propaga cookies cuando Supabase está configurado. El login/logout y la protección de rutas se implementan para cuentas internas provisionadas manualmente. No hay registro público. La configuración de Supabase Auth y la migración RLS interna se documentan en docs/internal-demo-access.md.
 
 ### 3. Crear las tablas
 
@@ -64,7 +64,7 @@ Ejecutar `schema.sql` desde el SQL Editor de Supabase en una instalación nueva.
 - El esquema crea las tablas en orden de dependencias y no inserta registros demo.
 - `onboarding_steps` tiene unicidad por cliente y número de paso.
 - RLS está habilitado y no se agregan políticas permisivas por defecto. Sin políticas explícitas, las consultas con la clave anon serán denegadas.
-- Antes de habilitar usuarios, definir y probar políticas RLS acordes al modelo de autenticación y roles.
+- Para la demo interna, revisar las policies existentes y aplicar la migración supabase/migrations/20261031_internal_demo_access.sql solo después de verificar el estado real de la base.
 - Si ya existe una base de datos, revisar y preparar una migración específica antes de ejecutar cambios; `schema.sql` no sustituye una migración de actualización.
 
 ### 4. Ejecutar localmente
@@ -126,7 +126,7 @@ npm run lint
 npm run build
 ```
 
-## Pendiente antes de producción
+## Pendiente para presentar el demo\n\n- Desactivar el registro público de Supabase Auth y provisionar manualmente cuentas internas.\n- Aplicar y probar la migración RLS interna después de auditar policies existentes.\n- Incorporar fixtures ficticios identificados como demo y validar la experiencia visual.\n\n## Pendiente antes de producción
 
 - Definir autenticación, roles y políticas RLS.
 - Implementar creación de clientes y generación idempotente de sus 20 pasos a partir de una plantilla aprobada.
