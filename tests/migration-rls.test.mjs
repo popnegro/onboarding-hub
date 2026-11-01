@@ -26,7 +26,7 @@ test('initial Supabase migration applies schema, seeds demo data and enforces ro
     `)
 
     const migration = (await readFile(
-      new URL('../supabase/migrations/20261031_internal_demo_access.sql', import.meta.url),
+      new URL('../supabase/migrations/20261101050338_internal_demo_access.sql', import.meta.url),
       'utf8',
     )).replace(
       'create extension if not exists pgcrypto;',
