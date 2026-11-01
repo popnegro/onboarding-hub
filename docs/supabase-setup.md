@@ -52,16 +52,18 @@ Las policies conceden acceso compartido a usuarios autenticados; solo son válid
 
 ## Criterios de aceptación
 
-- [x] Login/logout implementados en código.
+- [x] Login/logout implementados en código y validados manualmente.
 - [x] Middleware de protección compilado en `src/middleware.ts`.
 - [x] Rutas privadas redirigen a login sin sesión.
 - [x] Variables públicas Supabase Preview presentes en deployment auditado.
 - [x] Signup público deshabilitado (confirmación manual).
 - [x] Cuenta interna de QA provisionada.
+- [x] CI: 32/32 tests, lint, typecheck y Next.js build PASS.
+- [x] Vercel Preview READY para el HEAD candidato.
+- [ ] QA HTTP autenticado y visual desktop/mobile.
 - [ ] Leaked Password Protection habilitada.
 - [ ] Migración inicial aplicada y validada en entorno de prueba.
 - [ ] RLS: acceso anon rechazado y acceso authenticated validado.
-- [ ] QA remoto y visual desktop/mobile.
 - [ ] HUMAN GATE antes de DDL sobre el proyecto Supabase compartido.
 
 Hasta completar los pendientes, el flujo de autenticación está operativo, pero el backend de datos no debe considerarse operativo con datos reales.
