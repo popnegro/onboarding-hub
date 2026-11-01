@@ -1,4 +1,4 @@
-import { type Video } from '@/lib/supabase'
+import { type ContentResource, type Video } from '@/lib/supabase'
 import { getSupabasePublicConfig } from '@/lib/supabase/config'
 import { createClient } from '@/lib/supabase/server'
 import { ChevronLeft } from 'lucide-react'
@@ -40,15 +40,17 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   const { id: clientId } = await params
   const supabase = await createClient()
 
-  const [clientResult, stepsResult, videosResult] = await Promise.all([
+  const [clientResult, stepsResult, videosResult, resourcesResult] = await Promise.all([
     supabase.from('clients').select('*').eq('id', clientId).single(),
     supabase.from('onboarding_steps').select('*').eq('client_id', clientId).order('step_number', { ascending: true }),
     supabase.from('videos').select('*'),
+    supabase.from('content_resources').select('*').eq('active', true).order('stage').order('sort_order'),
   ])
 
   const { data: client, error: clientError } = clientResult
   const { data: steps, error: stepsError } = stepsResult
   const { data: videosData, error: videosError } = videosResult
+  const { data: resourcesData } = resourcesResult
 
   const anyError = clientError || stepsError || videosError
 
@@ -83,7 +85,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         <p className="text-pxsol-gray">{client.email}</p>
       </div>
 
-      <ClientPageContent client={client} initialSteps={steps || []} videos={videoMap} />
+      <ClientPageContent client={client} initialSteps={steps || []} videos={videoMap} resources={(resourcesData ?? []) as ContentResource[]} />
     </div>
   )
 }

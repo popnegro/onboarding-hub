@@ -1,3 +1,23 @@
+export type ContentType = 'video' | 'pdf' | 'presentation'
+
+export interface ContentResource {
+  id: string
+  title: string
+  description: string | null
+  content_type: ContentType
+  stage: number
+  step_number: number | null
+  language: 'es' | 'en' | 'pt'
+  storage_path: string | null
+  external_url: string | null
+  duration_seconds: number | null
+  active: boolean
+  sort_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type ClientStatus = 'active' | 'completed' | 'archived'
 export type OnboardingStepStatus = 'not_started' | 'in_progress' | 'completed' | 'verified'
 export type AdoptionRiskLevel = 'alto' | 'medio' | 'bajo'

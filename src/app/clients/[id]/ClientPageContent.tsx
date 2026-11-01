@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { type Client, type ContentResource, type OnboardingStep, type Video } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/client'
 import StepEditor from '@/components/StepEditor'
 
@@ -16,9 +16,10 @@ interface ClientPageContentProps {
   client: Client
   initialSteps: OnboardingStep[]
   videos: Record<string, Video>
+  resources: ContentResource[]
 }
 
-export default function ClientPageContent({ client, initialSteps, videos }: ClientPageContentProps) {
+export default function ClientPageContent({ client, initialSteps, videos, resources }: ClientPageContentProps) {
   const [steps, setSteps] = useState<OnboardingStep[]>(initialSteps)
   const [error, setError] = useState<string | null>(null)
   const [expandedEtapa, setExpandedEtapa] = useState(client.current_etapa || 1)
@@ -159,6 +160,42 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
               {expandedEtapa === etapa && (
                 <div className="border-t border-gray-200 p-6 bg-pxsol-light space-y-4">
+                  {resources.some((resource) => resource.stage === etapa) && (
+                    <section className="rounded-lg border border-blue-100 bg-white p-4">
+                      <h3 className="mb-3 font-semibold text-pxsol-dark">Materiales de esta etapa</h3>
+                      <ul className="space-y-2">
+                        {resources.filter((resource) => resource.stage === etapa).map((resource) => (
+                          <li key={resource.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                            <span className="text-pxsol-dark">
+                              {resource.title}
+                              <span className="text-xs text-pxsol-gray"> · {resource.content_type.toUpperCase()}{resource.step_number ? ' · Paso ' + resource.step_number : ''}</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (resource.external_url) {
+                                  window.open(resource.external_url, '_blank', 'noopener,noreferrer')
+                                  return
+                                }
+                                if (!resource.storage_path) return
+                                const { data, error } = await createClient()
+                                  .storage.from('pxsol-onboarding-content')
+                                  .createSignedUrl(resource.storage_path, 300)
+                                if (error) {
+                                  setError(error.message)
+                                  return
+                                }
+                                window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+                              }}
+                              className="font-medium text-pxsol-blue hover:underline"
+                            >
+                              Abrir recurso
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
                   {etapaSteps.map((step) => (
                     <StepEditor
                       key={step.id}

@@ -131,3 +131,15 @@ El script `build` ejecuta tests, lint, typecheck y el build de Next.js.
 ## Soporte
 
 Para dudas o bugs, crear un issue en GitHub.
+
+
+## Automatización, APIs, Python y MCP (demo)
+
+La arquitectura técnica y los límites de implementación están documentados en [docs/automation-architecture.md](docs/automation-architecture.md).
+
+- Workflow n8n importable: [automation/n8n/README.md](automation/n8n/README.md).
+- Export WF-00: [automation/n8n/wf-00-event-contract-validation.json](automation/n8n/wf-00-event-contract-validation.json).
+- Validador Python del contrato de eventos: `scripts/validate_demo_payload.py`.
+- Tests Python: `python -m unittest discover -s tests -p 'test_*.py' -v`.
+
+WF-00 es una prueba real de webhook/validación cuando se importa y ejecuta en una instancia n8n configurada; no es todavía una integración end-to-end con Supabase. La API de automatización y el servidor MCP siguen pendientes de implementación y QA. No se deben presentar como conectados hasta validar sus ejecuciones.
