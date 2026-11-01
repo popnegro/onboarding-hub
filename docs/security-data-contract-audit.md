@@ -45,7 +45,7 @@ Auditoría de solo lectura del proyecto `paycbzwufbviyplxjooc`:
 
 `supabase/migrations/20261031_internal_demo_access.sql` ahora contiene la creación inicial de las cinco tablas, índices, RLS, revocación de `anon`, permisos CRUD para `authenticated` y policies internas.
 
-Tablas: `videos`, `clients`, `onboarding_steps`, `adoption_metrics`, `video_sends`.
+Tablas: `videos`, `clients`, `onboarding_steps`, `adoption_metrics`, `video_sends`. La migración también inserta un cliente sintético `HOTEL DEMO PXSOL — DATOS FICTICIOS` con correo reservado `demo@pxsol.invalid` y los 20 títulos del catálogo editorial. Los pasos quedan `not_started`; no se insertan métricas, huéspedes, reservas, videos grabados ni identificadores reales de HubSpot/PMS. La inserción usa UUID fijo y `ON CONFLICT DO NOTHING` para ser idempotente.
 
 La policy concede acceso compartido a cualquier cuenta autenticada. Solo es aceptable para esta demo interna porque el signup está deshabilitado y las cuentas se provisionan manualmente. No es un diseño multi-tenant ni un modelo de roles.
 
@@ -68,7 +68,7 @@ La policy concede acceso compartido a cualquier cuenta autenticada. Solo es acep
 - [x] Login/logout real PASS (confirmación manual del usuario).
 - [x] Signup público deshabilitado PASS (confirmación manual del usuario).
 - [x] Rutas privadas protegidas sin sesión.
-- [ ] Repetir tests/build en el nuevo commit de migración.
+- [ ] Repetir tests/build en el nuevo commit de migración y verificar el seed ficticio.
 - [ ] QA visual desktop/mobile.
 - [ ] Leaked Password Protection habilitada.
 - [ ] Migración aplicada en entorno de prueba y pruebas RLS anon/authenticated.
