@@ -119,4 +119,66 @@ create policy internal_authenticated_all_adoption_metrics on public.adoption_met
 create policy internal_authenticated_all_video_sends on public.video_sends
   for all to authenticated using (auth.uid() is not null) with check (auth.uid() is not null);
 
+-- Synthetic internal-demo fixture. The .invalid address cannot receive email.
+-- No real hotel, guest, PMS, HubSpot deal, or communication destination is represented.
+with demo_client as (
+  insert into public.clients (
+    id, name, email, current_etapa, progress_percentage, adoption_score, status
+  )
+  values (
+    '00000000-0000-4000-8000-000000000001',
+    'HOTEL DEMO PXSOL — DATOS FICTICIOS',
+    'demo@pxsol.invalid',
+    1,
+    0,
+    0,
+    'active'
+  )
+  on conflict (id) do nothing
+  returning id
+),
+selected_demo_client as (
+  select id from demo_client
+  union all
+  select id
+  from public.clients
+  where id = '00000000-0000-4000-8000-000000000001'
+    and not exists (select 1 from demo_client)
+)
+insert into public.onboarding_steps (
+  client_id, step_number, etapa, title, description, status
+)
+select
+  selected_demo_client.id,
+  demo_steps.step_number,
+  demo_steps.etapa,
+  demo_steps.title,
+  'Actividad ficticia de demostración. El contenido editorial y los procedimientos del PMS requieren validación de PXSOL.',
+  'not_started'
+from selected_demo_client
+cross join (
+values
+  (1, 1, 'Bienvenido a PXSOL'),
+  (2, 1, 'Cómo funciona el proceso de onboarding'),
+  (3, 1, 'Relevamiento inicial del establecimiento'),
+  (4, 1, 'Plan de implementación y responsables'),
+  (5, 2, 'Acceso al sistema y usuarios'),
+  (6, 2, 'Datos generales del establecimiento'),
+  (7, 2, 'Configuración de habitaciones y unidades'),
+  (8, 2, 'Tarifas y condiciones comerciales'),
+  (9, 2, 'Disponibilidad y calendario operativo'),
+  (10, 2, 'Roles y permisos del equipo'),
+  (11, 3, 'Introducción al entorno de trabajo'),
+  (12, 3, 'Gestión de reservas'),
+  (13, 3, 'Check-in y check-out'),
+  (14, 3, 'Administración de huéspedes'),
+  (15, 3, 'Rutina operativa diaria'),
+  (16, 3, 'Reportes y seguimiento de la operación'),
+  (17, 4, 'Integraciones disponibles'),
+  (18, 4, 'Pruebas operativas antes de iniciar'),
+  (19, 4, 'Validación final con el establecimiento'),
+  (20, 4, 'Puesta en marcha y acompañamiento inicial')
+) as demo_steps(step_number, etapa, title)
+on conflict (client_id, step_number) do nothing;
+
 commit;
