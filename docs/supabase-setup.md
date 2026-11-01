@@ -46,7 +46,7 @@ La migración candidata `supabase/migrations/20261031_internal_demo_access.sql` 
 - `adoption_metrics`
 - `video_sends`
 
-Las policies conceden acceso compartido a usuarios autenticados; solo son válidas para esta demo interna con signup deshabilitado y cuentas provisionadas manualmente. No son multi-tenant.
+Las policies conceden acceso compartido a usuarios autenticados; solo son válidas para esta demo interna con signup deshabilitado y cuentas provisionadas manualmente. No son multi-tenant. La migración agrega un único cliente ficticio (`HOTEL DEMO PXSOL — DATOS FICTICIOS`, `demo@pxsol.invalid`) y sus 20 pasos editoriales en estado `not_started`; no agrega métricas ni datos reales de huéspedes, reservas, PMS o HubSpot. El seed es idempotente.
 
 **La migración no fue ejecutada.** No aplicar DDL al proyecto compartido sin HUMAN GATE. Primero probar la migración en un entorno aislado, revisar el resultado y validar el acceso anon/authenticated.
 
