@@ -1,9 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { PGlite } from '@electric-sql/pglite'
 
-test('initial Supabase migration applies schema, seeds demo data and enforces role-based RLS', async () => {
+let PGlite
+try {
+  ;({ PGlite } = await import('@electric-sql/pglite'))
+} catch (error) {
+  if (error?.code !== 'ERR_MODULE_NOT_FOUND') throw error
+}
+
+test('initial Supabase migration applies schema, seeds demo data and enforces role-based RLS', {
+  skip: !PGlite && 'PGlite is installed in CI only; production builds do not need the SQL test runtime.',
+}, async () => {
   const database = new PGlite()
 
   try {
