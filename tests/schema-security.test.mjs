@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs'
 
 const schema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8')
 const library = JSON.parse(readFileSync(new URL('../content/onboarding/pxsol-onboarding-es.v1.json', import.meta.url), 'utf8'))
+const clientCard = readFileSync(new URL('../src/components/ClientCard.tsx', import.meta.url), 'utf8')
+const clientPage = readFileSync(new URL('../src/app/clients/[id]/ClientPageContent.tsx', import.meta.url), 'utf8')
 const migration = readFileSync(
   new URL('../supabase/migrations/20261031_internal_demo_access.sql', import.meta.url),
   'utf8',
@@ -38,6 +40,14 @@ test('seeds one clearly fictional client and all 20 approved editorial steps ide
     return match?.[1].replaceAll("''", "'")
   }).filter(Boolean)
   assert.deepEqual(seededTitles, library.videos.map((video) => video.title))
+})
+
+test('stage labels in dashboard and detail match the approved onboarding library', () => {
+  for (const stage of library.stages) {
+    const expected = `${stage.id}: '${stage.name}'`
+    assert.ok(clientCard.includes(expected), `ClientCard missing stage label: ${stage.name}`)
+    assert.ok(clientPage.includes(expected), `ClientPageContent missing stage label: ${stage.name}`)
+  }
 })
 
 test('reference schema keeps default-deny posture until the internal access migration is applied', () => {
