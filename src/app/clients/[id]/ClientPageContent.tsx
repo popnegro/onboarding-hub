@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { type Client, type ContentResource, type OnboardingStep, type Video } from '@/lib/supabase'
 import { createClient } from '@/lib/supabase/client'
 import StepEditor from '@/components/StepEditor'
 
@@ -16,9 +16,10 @@ interface ClientPageContentProps {
   client: Client
   initialSteps: OnboardingStep[]
   videos: Record<string, Video>
+  resources: ContentResource[]
 }
 
-export default function ClientPageContent({ client, initialSteps, videos }: ClientPageContentProps) {
+export default function ClientPageContent({ client, initialSteps, videos, resources }: ClientPageContentProps) {
   const [steps, setSteps] = useState<OnboardingStep[]>(initialSteps)
   const [error, setError] = useState<string | null>(null)
   const [expandedEtapa, setExpandedEtapa] = useState(client.current_etapa || 1)
