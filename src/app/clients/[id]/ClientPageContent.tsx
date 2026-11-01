@@ -9,7 +9,7 @@ const ETAPA_LABELS: Record<number, string> = {
   1: 'Bienvenida',
   2: 'Configuración',
   3: 'Capacitación',
-  4: 'Integraciones',
+  4: 'Integraciones y puesta en marcha',
 }
 
 interface ClientPageContentProps {
