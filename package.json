@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm test && npm run lint && npm run typecheck && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.7.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@types/node": "^20.10.0",
@@ -18,8 +19,8 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "lucide-react": "^0.294.0",
-    "next": "^14.1.0",
-    "postcss": "^8.4.0",
+    "next": "^15.5.28",
+    "postcss": "^8.5.32",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.10.0",
@@ -28,6 +29,9 @@
   },
   "devDependencies": {
     "eslint": "^8.55.0",
-    "eslint-config-next": "^14.1.0"
+    "eslint-config-next": "^15.5.28"
+  },
+  "overrides": {
+    "postcss": "^8.5.32"
   }
 }

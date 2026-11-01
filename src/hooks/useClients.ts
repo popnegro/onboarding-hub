@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase, type Client } from '@/lib/supabase'
+import { type Client } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 
 export function useClients() {
   const [clients, setClients] = useState<Client[]>([])
@@ -7,7 +8,10 @@ export function useClients() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchClients = async () => {
+    let isActive = true
+    let cleanupSubscription: (() => void) | undefined
+
+    const fetchClients = async (supabase: ReturnType<typeof createClient>) => {
       try {
         setIsLoading(true)
         const { data, error: err } = await supabase
@@ -16,31 +20,41 @@ export function useClients() {
           .order('created_at', { ascending: false })
 
         if (err) throw err
-        setClients(data || [])
-        setError(null)
+        if (isActive) {
+          setClients(data || [])
+          setError(null)
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        if (isActive) {
+          setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        }
       } finally {
-        setIsLoading(false)
+        if (isActive) setIsLoading(false)
       }
     }
 
-    fetchClients()
+    try {
+      const supabase = createClient()
+      void fetchClients(supabase)
 
-    // Subscribe to real-time updates (opcional)
-    const subscription = supabase
-      .channel('clients')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'clients' },
-        () => {
-          fetchClients()
-        }
-      )
-      .subscribe()
+      const subscription = supabase
+        .channel('clients')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
+          void fetchClients(supabase)
+        })
+        .subscribe()
+
+      cleanupSubscription = () => {
+        void supabase.removeChannel(subscription)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+      setIsLoading(false)
+    }
 
     return () => {
-      subscription.unsubscribe()
+      isActive = false
+      cleanupSubscription?.()
     }
   }, [])
 

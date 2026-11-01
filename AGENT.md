@@ -16,7 +16,7 @@ validado, sin comprometer datos ni producción.
 
 -   Repositorio: `popnegro/onboarding-hub`.
 -   Aplicación: PXSOL Onboarding Hub.
--   Stack conocido: Next.js 14 App Router, TypeScript, Supabase,
+-   Stack conocido: Next.js 15.5.28 App Router, React 18, TypeScript, Supabase,
     HubSpot, n8n y canales de WhatsApp/correo previstos.
 -   Objetivo funcional: administrar el onboarding de clientes mediante
     20 pasos organizados en cuatro etapas:

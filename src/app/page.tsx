@@ -11,7 +11,7 @@ export default function Home() {
             Onboarding Hub
           </h1>
           <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Centraliza la gestión de onboarding de tus clientes hoteleros. Automatiza el seguimiento, monitorea la adopción y prevén el churn.
+            Centraliza el seguimiento del onboarding de clientes hoteleros. Las métricas y automatizaciones se habilitan al conectar fuentes e integraciones reales.
           </p>
           <Link
             href="/dashboard"
@@ -38,7 +38,7 @@ export default function Home() {
                 Checklist de Procesos
               </h3>
               <p className="text-sm text-pxsol-gray">
-                Guía de 20 pasos en 4 etapas para asegurar un onboarding consistente
+                Estructura de seguimiento prevista: 20 pasos organizados en 4 etapas
               </p>
             </div>
 
@@ -51,7 +51,7 @@ export default function Home() {
                 Monitor de Adopción
               </h3>
               <p className="text-sm text-pxsol-gray">
-                Scoring automático para detectar clientes en riesgo en tiempo real
+                Métricas pendientes de conectar a una fuente PMS real y verificada
               </p>
             </div>
 
@@ -64,7 +64,7 @@ export default function Home() {
                 Biblioteca de Videos
               </h3>
               <p className="text-sm text-pxsol-gray">
-                Envía el video correcto con 1 clic según la etapa del cliente
+                Biblioteca y envíos pendientes de configurar con videos y destinatarios reales
               </p>
             </div>
 
@@ -77,7 +77,7 @@ export default function Home() {
                 Alertas Inteligentes
               </h3>
               <p className="text-sm text-pxsol-gray">
-                Notificaciones automáticas de churn risk y recomendaciones
+                Alertas en preparación; no se envían comunicaciones hasta validar los datos y destinatarios
               </p>
             </div>
           </div>
@@ -97,8 +97,8 @@ export default function Home() {
               <p className="text-pxsol-gray font-medium">Etapas Claras</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-pxsol-blue mb-2">30%</p>
-              <p className="text-pxsol-gray font-medium">Mejora Esperada en Tiempo</p>
+              <p className="text-4xl font-bold text-pxsol-blue mb-2">PMS</p>
+              <p className="text-pxsol-gray font-medium">Fuente de adopción por integrar</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function Home() {
             ¿Listo para optimizar tu onboarding?
           </h2>
           <p className="text-pxsol-gray mb-8">
-            Accede al dashboard y comienza a gestionar tus clientes de forma más eficiente
+            Accede al dashboard para revisar el estado de configuración y el seguimiento disponible
           </p>
           <Link
             href="/dashboard"

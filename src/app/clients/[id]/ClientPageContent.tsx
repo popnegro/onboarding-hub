@@ -1,15 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase, type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { type Client, type OnboardingStep, type Video } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import StepEditor from '@/components/StepEditor'
-import AdoptionMonitor from '@/components/AdoptionMonitor'
 
 const ETAPA_LABELS: Record<number, string> = {
   1: 'Bienvenida',
   2: 'Configuración',
   3: 'Capacitación',
-  4: 'Integraciones',
+  4: 'Integraciones y puesta en marcha',
 }
 
 interface ClientPageContentProps {
@@ -24,22 +24,28 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
   const [expandedEtapa, setExpandedEtapa] = useState(client.current_etapa || 1)
 
   const handleStatusChange = async (stepId: string, newStatus: OnboardingStep['status']) => {
+    const completedDate =
+      newStatus === 'completed' || newStatus === 'verified'
+        ? new Date().toISOString()
+        : null
+
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
-        .update({
-          status: newStatus,
-          completed_date: newStatus === 'completed' || newStatus === 'verified' ? new Date().toISOString() : null,
-        })
+        .update({ status: newStatus, completed_date: completedDate })
         .eq('id', stepId)
 
       if (error) throw error
 
-      setSteps(
-        steps.map((s) =>
-          s.id === stepId ? { ...s, status: newStatus } : s
+      setSteps((currentSteps) =>
+        currentSteps.map((step) =>
+          step.id === stepId
+            ? { ...step, status: newStatus, completed_date: completedDate }
+            : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar paso')
     }
@@ -47,6 +53,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
   const handleNotesChange = async (stepId: string, notes: string) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update({ notes })
@@ -54,11 +61,12 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
       if (error) throw error
 
-      setSteps(
-        steps.map((s) =>
-          s.id === stepId ? { ...s, notes } : s
+      setSteps((currentSteps) =>
+        currentSteps.map((step) =>
+          step.id === stepId ? { ...step, notes } : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar notas')
     }
@@ -66,6 +74,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
   const handleBlockerChange = async (stepId: string, blocker: string | null) => {
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('onboarding_steps')
         .update({ blocker_reason: blocker })
@@ -73,11 +82,12 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
 
       if (error) throw error
 
-      setSteps(
-        steps.map((s) =>
-          s.id === stepId ? { ...s, blocker_reason: blocker || undefined } : s
+      setSteps((currentSteps) =>
+        currentSteps.map((step) =>
+          step.id === stepId ? { ...step, blocker_reason: blocker } : step
         )
       )
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar bloqueador')
     }
@@ -93,36 +103,29 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
         </div>
       )}
 
-      {/* Adopción Monitor */}
-      <div className="mb-8">
-        <AdoptionMonitor
-          metric={{
-            id: '',
-            client_id: client.id,
-            measurement_date: new Date().toISOString().split('T')[0],
-            reservations_7d: Math.floor(Math.random() * 150),
-            active_users: Math.floor(Math.random() * 6),
-            rates_updated: Math.random() > 0.5,
-            reports_generated: Math.floor(Math.random() * 20),
-            integrations_active: Math.floor(Math.random() * 5),
-            adoption_score: client.adoption_score,
-            risk_level: client.adoption_score >= 70 ? 'alto' : client.adoption_score >= 40 ? 'medio' : 'bajo',
-            created_at: new Date().toISOString(),
-          }}
-        />
-      </div>
+      <section className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-5">
+        <h2 className="font-semibold text-amber-900">Monitor de adopción no disponible</h2>
+        <p className="mt-1 text-sm text-amber-800">
+          No hay métricas de adopción de una fuente real verificada. Los datos de demostración
+          del MVP se ocultan para evitar mostrar indicadores ficticios.
+        </p>
+      </section>
 
-      {/* Checklist por Etapas */}
       <div className="space-y-6">
         {etapas.map((etapa) => {
-          const etapaSteps = steps.filter((s) => s.etapa === etapa)
-          const completedSteps = etapaSteps.filter((s) => s.status === 'completed' || s.status === 'verified').length
-          const progress = etapaSteps.length > 0 ? Math.round((completedSteps / etapaSteps.length) * 100) : 0
+          const etapaSteps = steps.filter((step) => step.etapa === etapa)
+          const completedSteps = etapaSteps.filter(
+            (step) => step.status === 'completed' || step.status === 'verified'
+          ).length
+          const progress = etapaSteps.length > 0
+            ? Math.round((completedSteps / etapaSteps.length) * 100)
+            : 0
 
           return (
             <div key={etapa} className="border border-gray-200 rounded-lg overflow-hidden">
-              {/* Etapa Header */}
               <button
+                type="button"
+                aria-expanded={expandedEtapa === etapa}
                 onClick={() => setExpandedEtapa(expandedEtapa === etapa ? 0 : etapa)}
                 className="w-full bg-white hover:bg-pxsol-light transition p-6 flex items-center justify-between cursor-pointer"
               >
@@ -136,7 +139,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
                 </div>
                 <div className="text-right ml-4">
                   <div className="w-16 h-16 relative flex items-center justify-center">
-                    <svg className="transform -rotate-90 w-16 h-16">
+                    <svg className="transform -rotate-90 w-16 h-16" aria-hidden="true">
                       <circle cx="32" cy="32" r="28" fill="none" stroke="#e5e7eb" strokeWidth="4" />
                       <circle
                         cx="32"
@@ -154,7 +157,6 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
                 </div>
               </button>
 
-              {/* Etapa Content */}
               {expandedEtapa === etapa && (
                 <div className="border-t border-gray-200 p-6 bg-pxsol-light space-y-4">
                   {etapaSteps.map((step) => (
@@ -164,7 +166,7 @@ export default function ClientPageContent({ client, initialSteps, videos }: Clie
                       onStatusChange={(newStatus) => handleStatusChange(step.id, newStatus)}
                       onNotesChange={(notes) => handleNotesChange(step.id, notes)}
                       onBlockerChange={(blocker) => handleBlockerChange(step.id, blocker)}
-                      videoTitle={step.video_id && videos[step.video_id]?.title}
+                      videoTitle={step.video_id ? videos[step.video_id]?.title : undefined}
                     />
                   ))}
                 </div>

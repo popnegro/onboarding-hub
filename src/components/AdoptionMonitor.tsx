@@ -1,7 +1,7 @@
 'use client'
 
 import { type AdoptionMetric } from '@/lib/supabase'
-import { getScoreColor, getScoreLabel } from '@/lib/adoption-scoring'
+import { getRiskLevel, getScoreColor, getScoreLabel } from '@/lib/adoption-scoring'
 import { AlertCircle, TrendingUp } from 'lucide-react'
 
 interface AdoptionMonitorProps {
@@ -11,7 +11,7 @@ interface AdoptionMonitorProps {
 export default function AdoptionMonitor({ metric }: AdoptionMonitorProps) {
   const scoreColor = getScoreColor(metric.adoption_score)
   const scoreLabel = getScoreLabel(metric.adoption_score)
-  const isAtRisk = metric.adoption_score < 50
+  const isAtRisk = getRiskLevel(metric.adoption_score) === 'alto'
 
   return (
     <div className={`border-2 rounded-lg p-6 ${isAtRisk ? 'border-red-300 bg-red-50' : 'border-green-300 bg-green-50'}`}>
@@ -91,7 +91,7 @@ export default function AdoptionMonitor({ metric }: AdoptionMonitorProps) {
             <span>Recomendaciones</span>
           </h4>
           <ul className="text-sm text-pxsol-dark space-y-1 list-disc list-inside">
-            {metric.reservations_7d === 0 && <li>Enviar video: "Cómo crear tu primera reserva"</li>}
+            {metric.reservations_7d === 0 && <li>Enviar video: Cómo crear tu primera reserva</li>}
             {metric.active_users < 2 && <li>Contactar al cliente para verificar acceso</li>}
             {!metric.rates_updated && <li>Revisar Paso 6: Configuración de tarifas</li>}
             {metric.reports_generated === 0 && <li>Hacer demo de reportes en próxima sesión</li>}

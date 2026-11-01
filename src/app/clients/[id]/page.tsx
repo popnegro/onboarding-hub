@@ -1,16 +1,45 @@
-import { supabase, type Video } from '@/lib/supabase'
+import { type Video } from '@/lib/supabase'
+import { getSupabasePublicConfig } from '@/lib/supabase/config'
+import { createClient } from '@/lib/supabase/server'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import ClientPageContent from './ClientPageContent'
 
 interface ClientDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
+}
+
+function SupabaseConfigurationNotice() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+        <h1 className="text-lg font-semibold">Supabase pendiente de configuración</h1>
+        <p className="mt-2 text-sm">
+          Para consultar el onboarding, configurá NEXT_PUBLIC_SUPABASE_URL y una clave pública:
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY o NEXT_PUBLIC_SUPABASE_ANON_KEY en Vercel.
+        </p>
+        <Link href="/dashboard" className="mt-4 inline-block text-sm font-medium underline">
+          Volver al dashboard
+        </Link>
+      </div>
+    </div>
+  )
 }
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
-  const clientId = params.id
+  const supabaseConfig = getSupabasePublicConfig({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  })
 
-  // Fetch all data in parallel on the server
+  if (!supabaseConfig) {
+    return <SupabaseConfigurationNotice />
+  }
+
+  const { id: clientId } = await params
+  const supabase = await createClient()
+
   const [clientResult, stepsResult, videosResult] = await Promise.all([
     supabase.from('clients').select('*').eq('id', clientId).single(),
     supabase.from('onboarding_steps').select('*').eq('client_id', clientId).order('step_number', { ascending: true }),
@@ -38,13 +67,12 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   }
 
   const videoMap: Record<string, Video> = {}
-  videosData?.forEach((v) => {
-    videoMap[v.id] = v
+  videosData?.forEach((video) => {
+    videoMap[video.id] = video
   })
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <Link href="/dashboard" className="flex items-center space-x-2 text-pxsol-blue hover:text-blue-700 mb-6 font-medium">
         <ChevronLeft size={20} />
         <span>Volver al dashboard</span>

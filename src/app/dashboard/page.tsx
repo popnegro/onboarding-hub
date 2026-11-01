@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase, type Client } from '@/lib/supabase'
+import { type Client } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import ClientCard from '@/components/ClientCard'
-import { Plus, AlertCircle } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 export default function DashboardPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -12,9 +13,13 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
 
   useEffect(() => {
+    let isActive = true
+
     const fetchClients = async () => {
       try {
         setIsLoading(true)
+        setError(null)
+        const supabase = createClient()
         let query = supabase.from('clients').select('*')
 
         if (filter !== 'all') {
@@ -26,24 +31,28 @@ export default function DashboardPage() {
         })
 
         if (err) throw err
-        setClients(data || [])
-        setError(null)
+        if (isActive) setClients(data || [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        if (isActive) {
+          setError(err instanceof Error ? err.message : 'Error al cargar clientes')
+        }
       } finally {
-        setIsLoading(false)
+        if (isActive) setIsLoading(false)
       }
     }
 
-    fetchClients()
+    void fetchClients()
+
+    return () => {
+      isActive = false
+    }
   }, [filter])
 
-  const atRiskClients = clients.filter((c) => c.adoption_score < 50)
-  const activeClients = clients.filter((c) => c.status === 'active')
+  const activeClients = clients.filter((client) => client.status === 'active')
+  const completedClients = clients.filter((client) => client.status === 'completed')
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-pxsol-dark mb-2">
@@ -53,13 +62,19 @@ export default function DashboardPage() {
             Gestiona el ciclo de vida de onboarding de tus clientes
           </p>
         </div>
-        <button className="mt-4 md:mt-0 px-4 py-2 bg-pxsol-blue text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
+        <button
+          type="button"
+          disabled
+          title="La creación de clientes todavía no está implementada"
+          aria-disabled="true"
+          className="mt-4 md:mt-0 px-4 py-2 bg-gray-200 text-gray-500 rounded-lg font-medium flex items-center space-x-2 cursor-not-allowed"
+        >
           <Plus size={20} />
           <span>Nuevo Cliente</span>
         </button>
       </div>
 
-      {/* KPIs */}
+      {!isLoading && !error && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <p className="text-sm text-pxsol-gray font-medium">Clientes Activos</p>
@@ -67,37 +82,37 @@ export default function DashboardPage() {
         </div>
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <p className="text-sm text-pxsol-gray font-medium">Completados</p>
-          <p className="text-3xl font-bold text-green-600 mt-2">
-            {clients.filter((c) => c.status === 'completed').length}
-          </p>
+          <p className="text-3xl font-bold text-green-600 mt-2">{completedClients.length}</p>
         </div>
-        <div className="bg-white rounded-lg p-6 border border-red-200 bg-red-50">
-          <p className="text-sm text-red-700 font-medium flex items-center space-x-2">
-            <AlertCircle size={16} />
-            <span>En Riesgo</span>
-          </p>
-          <p className="text-3xl font-bold text-red-600 mt-2">{atRiskClients.length}</p>
+        <div className="bg-white rounded-lg p-6 border border-amber-200 bg-amber-50">
+          <p className="text-sm text-amber-900 font-medium">Métricas de adopción</p>
+          <p className="text-xl font-bold text-amber-900 mt-2">Pendientes</p>
+          <p className="text-xs text-amber-800 mt-1">Requieren una fuente real verificada</p>
         </div>
       </div>
 
-      {/* Filtros */}
+      )}
+
       <div className="mb-6 flex gap-2">
-        {(['all', 'active', 'completed'] as const).map((f) => (
+        {(['all', 'active', 'completed'] as const).map((currentFilter) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={currentFilter}
+            onClick={() => setFilter(currentFilter)}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-              filter === f
+              filter === currentFilter
                 ? 'bg-pxsol-blue text-white'
                 : 'bg-white text-pxsol-dark border border-gray-200 hover:border-pxsol-blue'
             }`}
           >
-            {f === 'all' ? 'Todos' : f === 'active' ? 'Activos' : 'Completados'}
+            {currentFilter === 'all'
+              ? 'Todos'
+              : currentFilter === 'active'
+                ? 'Activos'
+                : 'Completados'}
           </button>
         ))}
       </div>
 
-      {/* Clientes */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin">

@@ -16,13 +16,18 @@ const DEFAULT_CONFIG: ScoringConfig = {
   integrations_weight: 0.15,
 }
 
+function normalizeSignal(value: number, target: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.min(Math.max((value / target) * 100, 0), 100)
+}
+
 export function calculateAdoptionScore(metric: AdoptionMetric): number {
-  // Normalizar cada métrica a escala 0-100
-  const reservationsScore = Math.min((metric.reservations_7d / 150) * 100, 100) // 150 = ideal
-  const usersScore = Math.min((metric.active_users / 5) * 100, 100) // 5 = ideal
+  // Normalizar cada señal a escala 0-100 y descartar valores inválidos/negativos.
+  const reservationsScore = normalizeSignal(metric.reservations_7d, 150) // 150 = ideal
+  const usersScore = normalizeSignal(metric.active_users, 5) // 5 = ideal
   const ratesScore = metric.rates_updated ? 100 : 0
-  const reportsScore = Math.min((metric.reports_generated / 10) * 100, 100) // 10 = ideal
-  const integrationsScore = Math.min((metric.integrations_active / 4) * 100, 100) // 4 = ideal
+  const reportsScore = normalizeSignal(metric.reports_generated, 10) // 10 = ideal
+  const integrationsScore = normalizeSignal(metric.integrations_active, 4) // 4 = ideal
 
   const score =
     reservationsScore * DEFAULT_CONFIG.reservations_weight +
@@ -35,9 +40,10 @@ export function calculateAdoptionScore(metric: AdoptionMetric): number {
 }
 
 export function getRiskLevel(score: number): 'alto' | 'medio' | 'bajo' {
-  if (score >= 70) return 'alto' // No es riesgo, es "On Track"
-  if (score >= 40) return 'medio'
-  return 'bajo' // Bajo/Crítico
+  // El campo describe riesgo de churn: una adopción alta implica riesgo bajo.
+  if (!Number.isFinite(score) || score < 40) return 'alto'
+  if (score < 70) return 'medio'
+  return 'bajo'
 }
 
 export function getScoreColor(score: number): string {
