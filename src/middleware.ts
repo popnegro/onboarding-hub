@@ -4,7 +4,8 @@ import { getSupabasePublicConfig } from './lib/supabase/config'
 
 const isProtectedPath = (pathname: string) =>
   pathname === '/dashboard' || pathname.startsWith('/dashboard/') ||
-  pathname === '/clients' || pathname.startsWith('/clients/')
+  pathname === '/clients' || pathname.startsWith('/clients/') ||
+  pathname === '/content' || pathname.startsWith('/content/')
 
 function redirectWithCookies(request: NextRequest, response: NextResponse, pathname: string, nextPath?: string) {
   const url = request.nextUrl.clone()
