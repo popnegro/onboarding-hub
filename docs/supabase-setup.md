@@ -1,12 +1,13 @@
 # Supabase — provisión y habilitación segura
 
-## Alcance aprobado
+## Alcance
 
-Supabase se utilizará para una demo de herramienta interna PXSOL destinada a una postulación laboral. No existe acceso para clientes hoteleros ni modelo multi-tenant en este alcance.
+Supabase se utiliza para una demo de herramienta interna PXSOL destinada a una postulación laboral. No existe acceso para clientes hoteleros ni modelo multi-tenant.
 
 - Solo cuentas internas creadas/invitadas manualmente.
-- Registro público desactivado.
-- Datos ficticios para la presentación.
+- Signup público deshabilitado: **PASS manual confirmado por el usuario el 01/11/2026**.
+- Login/logout real con cuenta QA: **PASS manual confirmado por el usuario**.
+- Datos ficticios para presentación.
 - Integraciones y comunicaciones externas deshabilitadas.
 
 ## Variables de la aplicación
@@ -20,48 +21,47 @@ Configurar en Vercel Preview:
 
 La app conserva compatibilidad con `NEXT_PUBLIC_SUPABASE_ANON_KEY` legacy. No combinar claves de proyectos distintos.
 
-No configurar `service_role`, `SUPABASE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_KEY` como variables públicas. No se necesita una clave privilegiada para el navegador.
+No configurar `service_role`, `SUPABASE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_KEY` como variables públicas. Las variables de integración existentes no se descifraron ni modificaron.
 
-## Configuración Auth requerida
+## Estado Auth
 
-1. Desactivar Allow new users to sign up / registro público.
-2. Crear o invitar manualmente solo las cuentas internas autorizadas.
-3. Configurar las URLs de redirección de Auth para el dominio Preview que se utilizará.
-4. No activar proveedores OAuth adicionales si no se requieren para el demo.
+- Signup público: confirmado manualmente deshabilitado.
+- Cuenta QA: creada y validada manualmente.
+- Login/logout: PASS manual.
+- Proveedores email/password habilitados; no se requieren OAuth adicionales.
+- Pendiente: activar Leaked Password Protection. Supabase Security Advisor mantiene un WARN por esta función deshabilitada.
+- Pendiente: QA visual desktop/mobile en Preview, actualmente protegido por Vercel SSO.
 
-La aplicación ya contiene login por email/contraseña, logout y protección de rutas en `src/middleware.ts`. Las rutas `/dashboard` y `/clients/*` requieren una sesión válida.
+## Estado de base de datos
 
-## Migración RLS
+Auditoría de solo lectura del 01/11/2026:
+- 0 tablas en `public`.
+- 0 migraciones registradas.
+- No hay datos de clientes ni policies RLS activas en tablas de aplicación.
 
-Archivo: `supabase/migrations/20261031_internal_demo_access.sql`.
+La migración candidata `supabase/migrations/20261031_internal_demo_access.sql` crea las cinco tablas de aplicación, índices, RLS y policies de acceso interno:
+- `videos`
+- `clients`
+- `onboarding_steps`
+- `adoption_metrics`
+- `video_sends`
 
-La migración aborta si encuentra policies existentes en las tablas objetivo. Si no existen, habilita RLS, revoca acceso a `anon` y concede CRUD a `authenticated`.
+Las policies conceden acceso compartido a usuarios autenticados; solo son válidas para esta demo interna con signup deshabilitado y cuentas provisionadas manualmente. No son multi-tenant.
 
-La política es de acceso compartido entre usuarios autenticados; solo es aceptable para el demo interno con registro público desactivado y cuentas manuales. No usar en un SaaS multi-tenant.
-
-**No ejecutar todavía:** primero inspeccionar el esquema, privilegios y policies reales. No ejecutar `schema.sql` sobre una base existente. No modificar datos reales.
-
-## Secuencia de validación
-
-1. Confirmar proyecto, organización y responsables.
-2. Verificar variables Preview (URL y publishable key).
-3. Desactivar registro público y provisionar una cuenta interna de prueba.
-4. Inspeccionar tablas, grants y policies en las cinco tablas.
-5. Revisar la migración y aplicarla solo si el estado real coincide con sus precondiciones.
-6. Probar acceso anónimo rechazado, login válido, logout, refresh y acceso directo a rutas.
-7. Probar lectura/escritura autenticada y rechazo con rol anon.
-8. Usar únicamente fixtures ficticios y visibles como demo.
+**La migración no fue ejecutada.** No aplicar DDL al proyecto compartido sin HUMAN GATE. Primero probar la migración en un entorno aislado, revisar el resultado y validar el acceso anon/authenticated.
 
 ## Criterios de aceptación
 
 - [x] Login/logout implementados en código.
 - [x] Middleware de protección compilado en `src/middleware.ts`.
-- [x] Rutas privadas redirigen a login en smoke test local sin Supabase.
-- [ ] Variables Supabase Preview verificadas en el deployment final.
-- [ ] Registro público desactivado.
-- [ ] Cuenta interna provisionada.
-- [ ] Policies reales inspeccionadas y migración validada.
-- [ ] QA remoto autenticado y no autenticado completado.
-- [ ] QA visual desktop/mobile completado.
+- [x] Rutas privadas redirigen a login sin sesión.
+- [x] Variables públicas Supabase Preview presentes en deployment auditado.
+- [x] Signup público deshabilitado (confirmación manual).
+- [x] Cuenta interna de QA provisionada.
+- [ ] Leaked Password Protection habilitada.
+- [ ] Migración inicial aplicada y validada en entorno de prueba.
+- [ ] RLS: acceso anon rechazado y acceso authenticated validado.
+- [ ] QA remoto y visual desktop/mobile.
+- [ ] HUMAN GATE antes de DDL sobre el proyecto Supabase compartido.
 
-Hasta cumplir los pendientes, el backend no debe considerarse operativo con datos reales.
+Hasta completar los pendientes, el flujo de autenticación está operativo, pero el backend de datos no debe considerarse operativo con datos reales.
