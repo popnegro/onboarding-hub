@@ -1,12 +1,13 @@
 import { LockKeyhole, ShieldCheck } from 'lucide-react'
 import LoginForm from '@/components/LoginForm'
+import { getSafeRedirectPath } from '@/lib/auth-redirect'
 import { getSupabasePublicConfig } from '@/lib/supabase/config'
 
 interface LoginPageProps { searchParams: Promise<{ next?: string }> }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next } = await searchParams
-  const nextPath = next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/login') ? next : '/dashboard'
+  const nextPath = getSafeRedirectPath(next)
   const configured = Boolean(getSupabasePublicConfig({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
