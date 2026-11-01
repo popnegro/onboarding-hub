@@ -16,6 +16,12 @@ begin
 end
 $$;
 
+alter table public.videos enable row level security;
+alter table public.clients enable row level security;
+alter table public.onboarding_steps enable row level security;
+alter table public.adoption_metrics enable row level security;
+alter table public.video_sends enable row level security;
+
 revoke all on table public.videos, public.clients, public.onboarding_steps, public.adoption_metrics, public.video_sends from anon;
 grant select, insert, update, delete on table public.videos, public.clients, public.onboarding_steps, public.adoption_metrics, public.video_sends to authenticated;
 
