@@ -7,7 +7,7 @@ const library = JSON.parse(readFileSync(new URL('../content/onboarding/pxsol-onb
 const clientCard = readFileSync(new URL('../src/components/ClientCard.tsx', import.meta.url), 'utf8')
 const clientPage = readFileSync(new URL('../src/app/clients/[id]/ClientPageContent.tsx', import.meta.url), 'utf8')
 const migration = readFileSync(
-  new URL('../supabase/migrations/20261031_internal_demo_access.sql', import.meta.url),
+  new URL('../supabase/migrations/20261101050338_internal_demo_access.sql', import.meta.url),
   'utf8',
 )
 
