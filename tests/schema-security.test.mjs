@@ -32,7 +32,7 @@ test('seeds one clearly fictional client and all 20 approved editorial steps ide
   assert.ok(migration.includes('demo@pxsol.invalid'))
   assert.ok(migration.includes('00000000-0000-4000-8000-000000000001'))
   assert.ok(migration.toUpperCase().includes('ON CONFLICT (CLIENT_ID, STEP_NUMBER) DO NOTHING'))
-  const seedValues = migration.split('cross join (values')[1]?.split(') as demo_steps')[0] ?? ''
+  const seedValues = migration.split('cross join (')[1]?.split(') as demo_steps')[0] ?? ''
   const seededTitles = seedValues.split('\n').map((line) => {
     const match = line.trim().match(/^\(\d+,\s*\d+,\s*'(.+)'\),?$/)
     return match?.[1].replaceAll("''", "'")
