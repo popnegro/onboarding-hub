@@ -33,3 +33,8 @@ test('content library route is protected by the existing authentication middlewa
   assert.match(middleware, /pathname === '\/content'/)
   assert.match(page, /content_resources/)
 })
+
+test('content migration never mutates a pre-existing Storage bucket', () => {
+  assert.match(migration, /on conflict \(id\) do nothing/i)
+  assert.doesNotMatch(migration, /on conflict \(id\) do update/i)
+})
