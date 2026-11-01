@@ -2,6 +2,7 @@
 
 **Fecha de actualización:** 01/11/2026  
 **Rama:** `fix/vercel-build-supabase-types`  
+**HEAD validado:** `2793cbb79cdb95e27ff12bd786056bfcb0f57e0c`  
 **Alcance:** demo de herramienta interna para postulación laboral; sin acceso de clientes hoteleros. Los datos de presentación deben ser ficticios.
 
 ## Decisión de producto
@@ -43,9 +44,9 @@ Auditoría de solo lectura del proyecto `paycbzwufbviyplxjooc`:
 
 ## Migración candidata
 
-`supabase/migrations/20261031_internal_demo_access.sql` ahora contiene la creación inicial de las cinco tablas, índices, RLS, revocación de `anon`, permisos CRUD para `authenticated` y policies internas.
+`supabase/migrations/20261031_internal_demo_access.sql` contiene la creación inicial de cinco tablas, índices, RLS, revocación de `anon`, permisos CRUD para `authenticated` y policies internas.
 
-Tablas: `videos`, `clients`, `onboarding_steps`, `adoption_metrics`, `video_sends`. La migración también inserta un cliente sintético `HOTEL DEMO PXSOL — DATOS FICTICIOS` con correo reservado `demo@pxsol.invalid` y los 20 títulos del catálogo editorial. Los pasos quedan `not_started`; no se insertan métricas, huéspedes, reservas, videos grabados ni identificadores reales de HubSpot/PMS. La inserción usa UUID fijo y `ON CONFLICT DO NOTHING` para ser idempotente.
+Tablas: `videos`, `clients`, `onboarding_steps`, `adoption_metrics`, `video_sends`. La migración inserta un cliente sintético `HOTEL DEMO PXSOL — DATOS FICTICIOS` con correo reservado `demo@pxsol.invalid` y los 20 títulos del catálogo editorial. Los pasos quedan `not_started`; no se insertan métricas, huéspedes, reservas, videos grabados ni identificadores reales de HubSpot/PMS. La inserción usa UUID fijo y `ON CONFLICT DO NOTHING` para ser idempotente.
 
 La policy concede acceso compartido a cualquier cuenta autenticada. Solo es aceptable para esta demo interna porque el signup está deshabilitado y las cuentas se provisionan manualmente. No es un diseño multi-tenant ni un modelo de roles.
 
@@ -60,19 +61,23 @@ La policy concede acceso compartido a cualquier cuenta autenticada. Solo es acep
 - No hay ingestión PMS verificada; no presentar scores ficticios como métricas reales.
 - Las variables Vercel `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_SECRET_KEY` aparecieron en el inventario de integración; no se descifraron, usaron ni modificaron. El código de aplicación revisado no las referencia.
 
-## Validación consolidada
+## Validación consolidada del HEAD
 
-- [x] Tests automatizados 30/30 en HEAD de código auditado previamente.
-- [x] Lint, TypeScript y build PASS en HEAD de código auditado previamente.
-- [x] Deployment Preview READY para HEAD `2379d24d50fa8d4bce6ccf53789e80aed3957859`.
+- [x] GitHub Actions CI run #18: SUCCESS.
+- [x] Tests automatizados: **32/32 PASS**.
+- [x] ESLint: PASS.
+- [x] TypeScript (`tsc --noEmit`): PASS.
+- [x] Next.js production build: compilación correcta.
+- [x] Vercel Preview: READY para SHA `2793cbb79cdb95e27ff12bd786056bfcb0f57e0c`.
+- [x] Vercel combined status: SUCCESS.
 - [x] Login/logout real PASS (confirmación manual del usuario).
 - [x] Signup público deshabilitado PASS (confirmación manual del usuario).
 - [x] Rutas privadas protegidas sin sesión.
-- [ ] Repetir tests/build en el nuevo commit de migración y verificar el seed ficticio.
+- [ ] QA HTTP remoto con sesión y sin sesión; el Preview está protegido por Vercel SSO.
 - [ ] QA visual desktop/mobile.
 - [ ] Leaked Password Protection habilitada.
 - [ ] Migración aplicada en entorno de prueba y pruebas RLS anon/authenticated.
 - [ ] HUMAN GATE antes de aplicar DDL al proyecto Supabase compartido.
 - [ ] Verificar lecturas/escrituras reales con cuenta interna después de la migración.
 
-**Estado:** aplicación web y autenticación validadas; backend de datos bloqueado hasta revisar/aprobar y aplicar la migración inicial.
+**Estado:** aplicación web, CI y autenticación validadas. Backend de datos todavía no desplegado; el siguiente paso requiere entorno aislado para probar la migración y HUMAN GATE antes de cualquier DDL en el proyecto Supabase compartido.
