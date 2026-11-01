@@ -2,46 +2,70 @@
 
 ## Alcance aprobado
 
-Onboarding Hub es una herramienta interna de PXSOL que se presenta como demo en una postulación laboral. No es un portal para clientes hoteleros.
+Onboarding Hub es una herramienta interna de PXSOL para una demo de presentación. No es un portal de clientes hoteleros ni un SaaS multi-tenant.
 
-- Solo ingresan cuentas internas creadas o invitadas manualmente por el administrador.
-- No se habilita registro público.
-- Los usuarios autenticados del equipo comparten el alcance operativo del demo.
-- Los registros de clientes, pasos y métricas utilizados en la presentación deben ser ficticios.
-- No se conectan HubSpot, PMS, WhatsApp, email ni automatizaciones reales.
+- Solo ingresan cuentas internas creadas o invitadas manualmente.
+- El registro público de Supabase Auth permanece deshabilitado.
+- Los usuarios autenticados comparten el alcance operativo de esta demo.
+- Los datos de presentación son ficticios.
+- HubSpot, PMS, WhatsApp, email y automatizaciones externas no están conectados ni habilitados.
 
-## Implementación de aplicación
+## Autenticación y rutas
 
-- La ruta /login autentica mediante Supabase Auth con email y contraseña.
-- /dashboard y /clients/* requieren una sesión válida.
-- Middleware valida la identidad con auth.getUser() y falla cerrado si faltan variables de Supabase.
-- El cierre de sesión invalida la sesión y vuelve a /login.
-- No existe registro público ni recuperación de contraseña pública en esta demo.
+- `/login` autentica mediante Supabase Auth con email y contraseña.
+- `/dashboard` y `/clients/*` requieren una sesión válida.
+- `src/middleware.ts` valida la identidad con `auth.getUser()`, refresca cookies y redirige al login si no hay sesión.
+- Si faltan las variables públicas de Supabase, las rutas privadas permanecen bloqueadas.
+- El cierre de sesión invalida la sesión y vuelve a `/login`.
+- No hay registro público.
 
-## Configuración requerida en Supabase
+La protección Vercel Authentication (SSO) es una capa adicional de acceso al deployment; no sustituye Supabase Auth.
 
-1. Desactivar el registro público de usuarios (Allow new users to sign up).
-2. Crear/invitar manualmente solo las cuentas internas que deban presentar o mantener el demo.
-3. Configurar URLs de redirección de Auth para los dominios autorizados.
-4. Revisar las políticas actuales de las cinco tablas antes de aplicar la migración.
-5. Aplicar supabase/migrations/20261031_internal_demo_access.sql solo si la inspección confirma que no existen políticas previas que deban preservarse.
+## Estado Supabase verificado — 01/11/2026
 
-La migración concede CRUD a authenticated para las cinco tablas y revoca acceso anon. Solo es apropiada con registro público desactivado y cuentas internas provisionadas manualmente. No usar este modelo para un SaaS multi-tenant ni para un portal público.
+Proyecto: `paycbzwufbviyplxjooc`.
 
-## Límites del demo
+Migración aplicada: `20261101050338_internal_demo_access`.
 
-- No ejecutar schema.sql sobre una base existente.
+Tablas creadas y con RLS habilitado:
+- `videos`
+- `clients`
+- `onboarding_steps`
+- `adoption_metrics`
+- `video_sends`
+
+Policies `internal_authenticated_all_*`: CRUD para `authenticated`, condicionado a `auth.uid() IS NOT NULL`. El rol `anon` no tiene SELECT en esas tablas. La política es compartida entre usuarios autenticados y **no proporciona aislamiento por usuario o tenant**.
+
+La migración insertó un único cliente ficticio (`HOTEL DEMO PXSOL — DATOS FICTICIOS`, `demo@pxsol.invalid`) y sus 20 pasos en estado `not_started`. No contiene huéspedes, reservas ni métricas reales.
+
+No volver a ejecutar esta migración sobre el proyecto conectado. No ejecutar `schema.sql` sobre una base existente.
+
+## Controles operativos
+
+- Mantener signup público deshabilitado.
+- Provisionar manualmente las cuentas internas autorizadas.
 - No usar service-role keys en el navegador.
 - No cargar datos personales o comerciales reales.
 - No enviar comunicaciones ni activar workflows.
-- No calcular churn con métricas ficticias: la UI debe mantener visible que el monitor requiere una fuente real verificada.
+- No presentar métricas ficticias como adopción real.
+- No convertir este modelo RLS compartido en una solución multi-tenant sin un diseño y una migración específicos.
 
-## Validación pendiente
+## Validación
 
-- [ ] Confirmar Supabase Auth y registro público desactivado.
-- [ ] Inspeccionar policies existentes y esquema real.
-- [ ] Aplicar migración revisada en entorno demo.
-- [ ] Crear cuenta interna de prueba.
-- [ ] Probar acceso anónimo, login, logout, refresh y acceso directo a rutas protegidas.
-- [ ] Probar lectura/escritura con cuenta autenticada y rechazo con rol anon.
-- [ ] Cargar únicamente fixtures ficticios y marcarlos visualmente como datos demo.
+- [x] Login/logout con cuenta QA confirmados manualmente por el usuario.
+- [x] Signup público deshabilitado, confirmado manualmente.
+- [x] Middleware y redirección de rutas privadas implementados.
+- [x] Migración aplicada y versión remota sincronizada.
+- [x] RLS habilitado en las cinco tablas.
+- [x] Acceso anon rechazado por las policies y permisos revisados.
+- [x] Fixture ficticio y 20 pasos creados.
+- [x] CI, lint, typecheck y build validados en el pipeline.
+- [x] Deployment de `main` en Vercel en estado `READY`.
+- [ ] Smoke test HTTP posterior al último merge desde una sesión Vercel autorizada.
+- [ ] QA visual autenticado posterior al último merge.
+
+## Limitaciones conocidas
+
+- Leaked Password Protection permanece deshabilitada por una limitación del plan Supabase actual; no realizar upgrade ni workaround sin autorización.
+- El acceso automatizado al deployment protegido por SSO no permite completar el smoke test HTTP. No deshabilitar SSO para sortearlo.
+- La demo no debe considerarse lista para operación hotelera real ni para producción multi-tenant.
