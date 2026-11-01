@@ -1,93 +1,94 @@
 # Auditoría de contrato de datos y autorización — PXSOL Onboarding Hub
 
 **Fecha:** 31/10/2026  
-**Rama auditada:** `fix/vercel-build-supabase-types`  
-**HEAD de referencia original:** `c91b240eb41f1efc6816f726d290946d6ecf5fdf`  
-**Actualización:** 31/10/2026 — corrección de semántica de riesgo y normalización defensiva en `src/lib/adoption-scoring.ts`.
+**Rama:** `fix/vercel-build-supabase-types`  
+**Alcance:** demo interno para postulación laboral; no hay acceso de clientes hoteleros.
 
-## Alcance y límites
+## Decisión de producto
 
-Revisión estática de `schema.sql`, `middleware.ts`, clientes Supabase, hooks de datos y componentes de edición. No se obtuvo acceso a un proyecto Supabase ni a una base de datos real. No se ejecutaron consultas, migraciones ni escrituras remotas.
+Onboarding Hub es una herramienta de uso interno del equipo PXSOL que se presenta como demo. No requiere multi-tenancy, roles de clientes finales ni aislamiento por hotel. El acceso previsto es para cuentas internas creadas manualmente en Supabase Auth. Los datos de presentación deben ser ficticios.
 
-## Hallazgos confirmados
+## Estado P0 — Autenticación y acceso
 
-### P0 — No habilitar acceso de usuarios ni datos reales
+### Implementado en código
+- Login email/contraseña con Supabase Auth en `/login`.
+- Logout en navegación desktop y mobile.
+- Middleware ubicado en `src/middleware.ts`, junto al App Router.
+- `auth.getUser()` valida identidad; `/dashboard` y `/clients/*` redirigen a login si no hay usuario.
+- Fail-closed cuando faltan variables Supabase.
+- Redirect post-login restringido a rutas internas.
+- Smoke test local sin configuración Supabase: dashboard y ficha responden 307 a login; login responde 200.
 
-1. **No hay flujo de autenticación de aplicación.** No se encontraron páginas ni acciones de login/logout ni una comprobación de usuario autenticado en las rutas de aplicación.
-2. **El middleware solo refresca cookies.** Ejecuta `auth.getUser()` cuando hay configuración, pero no inspecciona el resultado ni bloquea rutas privadas. Su comentario declara que la autorización queda pendiente.
-3. **RLS está habilitado sin políticas** en `videos`, `clients`, `onboarding_steps`, `adoption_metrics` y `video_sends`. Esto aplica denegación por defecto a operaciones con la clave pública. Es seguro como postura provisional, pero las operaciones de negocio no funcionarán hasta crear políticas específicas.
-4. **Los hooks escriben directamente desde el navegador.** `useOnboardingSteps.updateStep` actualiza `onboarding_steps` con el cliente público. El acceso debe permanecer denegado hasta que RLS y la autorización de servidor estén definidas y probadas.
-5. **Las rutas `/dashboard` y `/clients/[id]` no están protegidas por autenticación de aplicación.** La protección SSO observada corresponde al Preview de Vercel, no sustituye la autorización de la aplicación.
+### Pendiente de configuración y validación real
+- Desactivar registro público en Supabase Auth.
+- Crear/invitar manualmente las cuentas internas.
+- Inspeccionar esquema y policies actuales del proyecto Supabase.
+- Aplicar la migración interna solo después de verificar que no hay policies existentes.
+- Probar login/logout, refresh y lecturas/escrituras con una cuenta interna real.
+- Verificar en Preview el redirect anónimo con el middleware compilado.
 
-**Decisión de seguridad:** no abrir políticas generales, no agregar `USING (true)`, no habilitar escritura con anon/publishable key y no exponer datos reales en Preview/Production antes de resolver estos puntos.
+### Migración RLS preparada, no ejecutada
 
-### P1 — Semántica del nivel de riesgo de adopción
+Archivo: `supabase/migrations/20261031_internal_demo_access.sql`.
 
-La función `getRiskLevel` asignaba `alto` a scores de adopción >=70 y `bajo` a scores <40, aunque el campo persistido se llama `risk_level` y la documentación de negocio define esos mismos rangos como On Track y Churn Risk, respectivamente. Esa inversión podía etiquetar clientes saludables como riesgo alto y clientes críticos como riesgo bajo en integraciones o automatizaciones futuras.
+La migración:
+- Aborta si detecta cualquier policy existente en las cinco tablas objetivo.
+- Habilita RLS.
+- Revoca privilegios de `anon`.
+- Concede CRUD al rol `authenticated` y crea políticas para usuarios autenticados.
 
-Corrección aplicada en la rama candidata (`src/lib/adoption-scoring.ts`, `src/components/AdoptionMonitor.tsx` y `tests/adoption-scoring.test.mjs`):
+**Límite explícito:** todos los usuarios autenticados comparten permisos operativos sobre los datos del demo. Esto solo es aceptable si el alta pública está desactivada y las cuentas son provisionadas manualmente. No es un diseño multi-tenant ni un modelo de roles. No ejecutar sin inspeccionar la base real.
+
+Los hooks actuales actualizan pasos desde el navegador. La seguridad de estas operaciones depende de que RLS esté correctamente aplicada; no habilitar consultas reales antes de la migración validada.
+
+## P1 — Semántica del nivel de riesgo de adopción
+
+La función `getRiskLevel` asignaba riesgo alto a scores >=70 y bajo a scores <40, invirtiendo el sentido de los rangos de adopción.
+
+Corrección aplicada en `src/lib/adoption-scoring.ts`, `src/components/AdoptionMonitor.tsx` y tests:
 - Score >=70 → riesgo `bajo`.
 - Score 40–69 → riesgo `medio`.
-- Score <40 o score no finito → riesgo `alto`.
-- Las señales numéricas negativas o no finitas ahora aportan 0 al score; los valores superiores al objetivo siguen limitados a 100.
+- Score <40 o no finito → riesgo `alto`.
+- Señales negativas o no finitas aportan 0; valores por encima del objetivo se limitan a 100.
 
-Los umbrales y ponderaciones existentes se conservaron; no se validaron contra datos reales ni se presentan como reglas comerciales aprobadas.
+Los pesos y umbrales no fueron validados con datos reales ni aprobados como reglas comerciales.
 
-### P1 — Integridad del modelo de datos
+## P1 — Integridad del modelo de datos
 
-El esquema define las tablas y las relaciones básicas, pero no formaliza varias reglas de dominio:
+El esquema base no formaliza:
+- Rango 1–20 de `onboarding_steps.step_number`.
+- Rango 1–4 de `onboarding_steps.etapa` ni relación declarativa entre paso y etapa.
+- Valores permitidos de status mediante CHECK/ENUM.
+- Rangos para `progress_percentage`, `adoption_score` y contadores.
+- Unicidad de métricas por cliente/fecha.
+- Unicidad/versionado de videos por número de paso.
+- FK/rango/ciclos para `depends_on_step`.
+- Trigger para mantener `updated_at`.
+- Convención temporal explícita para timestamps con zona.
 
-- `onboarding_steps.step_number`: comentario indica 1–20, pero no hay CHECK que lo garantice.
-- `onboarding_steps.etapa`: comentario indica 1–4, pero no hay CHECK que lo garantice ni relación declarativa entre paso y etapa.
-- `status` de clientes y pasos: los valores válidos están documentados en comentarios, no restringidos por CHECK o ENUM.
-- `progress_percentage`, `adoption_score` y contadores de métricas no tienen límites/rangos declarados en base de datos.
-- `adoption_metrics` permite más de una medición por cliente/fecha; debe decidirse si se requiere unicidad.
-- `videos.step_number` no es único; debe definirse si puede haber versiones/idiomas múltiples por paso.
-- `depends_on_step` es un entero sin FK a otro paso ni validación de rango/ciclo.
-- `updated_at` tiene default, pero no hay trigger que lo actualice automáticamente al modificar filas.
-- Las fechas usan `TIMESTAMP` sin zona horaria; debe definirse la convención temporal antes de integrar procesos externos.
+No agregar constraints sin inspeccionar datos existentes: pueden rechazar o alterar registros.
 
-No se agregaron constraints porque pueden rechazar datos existentes y requieren inspección de datos y aprobación de reglas.
+## P1 — Integraciones y datos
 
-### P1 — Propiedad y alcance de acceso
+- HubSpot, PMS, WhatsApp, email y n8n permanecen fuera del alcance operativo del demo.
+- No hay ingestión de métricas PMS verificada.
+- No mostrar scores ficticios como indicadores reales de adopción/churn.
+- No enviar comunicaciones ni activar workflows.
+- No incluir datos personales o comerciales reales en fixtures, logs o capturas.
 
-- `clients.assigned_onboarder_id` referencia `auth.users(id)`, pero no existe tabla de perfiles/roles ni asignación de permisos.
-- `videos` no tiene propietario/tenant; el alcance de administración y lectura no está definido.
-- `adoption_metrics` y `video_sends` dependen de `client_id`; sus políticas deben comprobar la propiedad del cliente relacionado, no solo el usuario autenticado.
-- `clients.email` y `onboarding_steps.notes/blocker_reason` pueden contener información de clientes. Deben limitarse por tenant/rol y no aparecer en logs públicos.
+## Validación
 
-## Matriz mínima de autorización a aprobar
+- [x] Decisión de producto interna, sin acceso de clientes finales.
+- [x] Login/logout y middleware implementados.
+- [x] Middleware incluido en el manifest de build.
+- [x] Tests 30/30, lint, TypeScript y build PASS en sandbox aislado.
+- [x] Smoke test local de rutas privadas sin Supabase.
+- [ ] Deployment Preview final READY y smoke test remoto.
+- [ ] Registro público de Supabase Auth desactivado.
+- [ ] Esquema y policies reales inspeccionados.
+- [ ] Migración RLS aplicada y validada en entorno demo.
+- [ ] Cuenta interna real probada.
+- [ ] QA visual desktop/mobile.
+- [ ] Fixtures ficticios identificados como demo.
 
-| Recurso/acción | Pregunta de negocio pendiente | Control técnico requerido |
-|---|---|---|
-| Clientes: lectura | ¿Administrador global o onboarder asignado? | Server-side + RLS por asignación/tenant |
-| Clientes: alta/edición/archivo | ¿Qué rol crea, modifica y archiva? | Handler server-side + política de escritura |
-| Pasos: lectura | ¿El cliente final puede acceder o solo el equipo interno? | RLS mediante relación con cliente |
-| Pasos: estado/notas/bloqueadores | ¿Qué roles editan cada campo? | Validación de campos y autorización por acción |
-| Videos: CRUD | ¿Biblioteca global o por tenant? | Rol administrador y alcance definido |
-| Métricas: ingestión | ¿Qué PMS es fuente de verdad y quién puede sincronizar? | Endpoint server-side autenticado, idempotencia y auditoría |
-| Envíos: creación | ¿Qué canal, destinatario y aprobador? | Proceso server-side; nunca envío directo desde el navegador |
-
-## Secuencia segura propuesta
-
-1. Aprobar tenant/ownership y roles (administrador, onboarder y cualquier rol de solo lectura).
-2. Definir si existe acceso de cliente final y qué información puede consultar.
-3. Diseñar matriz de permisos por tabla y acción; mapearla a autorización server-side y políticas RLS.
-4. Añadir login/logout y protección de rutas; usar `auth.getUser()` como verificación de identidad, no `getSession()` como decisión de autorización.
-5. Preparar migraciones incrementales con constraints/índices/triggers solo después de inspeccionar la base real y sus datos.
-6. Probar con usuarios de distintos roles, clientes asignados/no asignados y casos negativos (lectura, inserción, actualización y borrado).
-7. Implementar alta idempotente de cliente y plantilla versionada de 20 pasos.
-8. Recién entonces conectar PMS, métricas y comunicaciones con credenciales server-side, idempotencia y auditoría.
-
-## Estado de aceptación
-
-- [x] Esquema y código inspeccionados estáticamente.
-- [x] P0 de autenticación/autorización documentados.
-- [x] Reglas de integridad faltantes identificadas.
-- [x] Matriz de decisiones y secuencia segura documentadas.
-- [ ] Proyecto Supabase y base real disponibles para inspección.
-- [ ] Modelo de roles/ownership aprobado.
-- [ ] Migraciones seguras implementadas y probadas.
-- [ ] Autenticación, autorización y RLS validadas con usuarios reales.
-
-**Conclusión:** el código está preparado para una configuración Supabase segura en términos de no abrir acceso por defecto, pero no constituye todavía un backend autenticado y operativo. Mantener el PMV bloqueado para datos reales y no ejecutar `schema.sql` sobre una base existente.
+**Conclusión:** el flujo de autenticación está implementado en código, pero el backend sigue BLOCKED hasta configurar Supabase Auth, inspeccionar policies y validar una cuenta interna real. No ejecutar `schema.sql` sobre una base existente ni aplicar la migración sin auditoría previa.
