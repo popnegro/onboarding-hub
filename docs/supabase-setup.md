@@ -1,73 +1,67 @@
 # Supabase — provisión y habilitación segura
 
-## Estado auditado
+## Alcance aprobado
 
-En la auditoría del 30/10/2026, Vercel mostraba registros de variables para Supabase en Preview y Production, pero sus valores estaban vacíos:
+Supabase se utilizará para una demo de herramienta interna PXSOL destinada a una postulación laboral. No existe acceso para clientes hoteleros ni modelo multi-tenant en este alcance.
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- Solo cuentas internas creadas/invitadas manualmente.
+- Registro público desactivado.
+- Datos ficticios para la presentación.
+- Integraciones y comunicaciones externas deshabilitadas.
 
-No se obtuvo un Project URL ni una clave pública válida. El dashboard del Preview seguía mostrando el estado de configuración pendiente. La existencia del nombre de una variable no equivale a una credencial configurada.
+## Variables de la aplicación
 
-## Variables requeridas por la aplicación
-
-Configurar en Vercel, como mínimo, para Preview y Production según corresponda:
+Configurar en Vercel Preview:
 
 | Variable | Valor |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL del proyecto Supabase real |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key del proyecto; preferida |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Legacy anon key; alternativa compatible |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto PXSOL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key del mismo proyecto |
 
-El código prefiere la publishable key actual y conserva compatibilidad con la legacy anon key. No configurar ambas con valores de proyectos diferentes.
+La app conserva compatibilidad con `NEXT_PUBLIC_SUPABASE_ANON_KEY` legacy. No combinar claves de proyectos distintos.
 
-No usar `service_role`, `secret key`, `SUPABASE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_KEY` en variables públicas. La aplicación cliente no necesita una clave privilegiada.
+No configurar `service_role`, `SUPABASE_SECRET_KEY` ni `SUPABASE_SERVICE_ROLE_KEY` como variables públicas. No se necesita una clave privilegiada para el navegador.
 
-## Secuencia de provisión
+## Configuración Auth requerida
 
-1. Crear o seleccionar el proyecto Supabase real de PXSOL.
-2. Confirmar organización, región, proyecto y responsable operativo.
-3. Copiar el Project URL y la Publishable key (o legacy anon key) desde el panel oficial del proyecto.
-4. Cargar las variables requeridas en los entornos Vercel adecuados sin incluirlas en Git, logs o capturas.
-5. Generar un nuevo deployment Preview del SHA candidato; las variables públicas se incorporan durante el build.
-6. Verificar que el dashboard ya no muestre el aviso de configuración pendiente.
-7. Antes de habilitar consultas reales, completar autenticación, autorización y políticas RLS.
+1. Desactivar Allow new users to sign up / registro público.
+2. Crear o invitar manualmente solo las cuentas internas autorizadas.
+3. Configurar las URLs de redirección de Auth para el dominio Preview que se utilizará.
+4. No activar proveedores OAuth adicionales si no se requieren para el demo.
 
-## Seguridad de datos y autorización
+La aplicación ya contiene login por email/contraseña, logout y protección de rutas en `src/middleware.ts`. Las rutas `/dashboard` y `/clients/*` requieren una sesión válida.
 
-El esquema actual habilita RLS en las cinco tablas y no crea políticas. Es un estado de denegación por defecto: evita exponer datos mediante la clave pública, pero también impide el uso normal de las tablas.
+## Migración RLS
 
-No agregar políticas `USING (true)` ni habilitar lecturas/escrituras globales para resolver errores.
+Archivo: `supabase/migrations/20261031_internal_demo_access.sql`.
 
-Antes de definir políticas se debe aprobar el modelo funcional:
+La migración aborta si encuentra policies existentes en las tablas objetivo. Si no existen, habilita RLS, revoca acceso a `anon` y concede CRUD a `authenticated`.
 
-- ¿Existe un rol administrador global?
-- ¿Qué usuarios pueden ver todos los clientes?
-- ¿Los onboarders solo pueden ver clientes donde `assigned_onboarder_id = auth.uid()`?
-- ¿Quién puede editar pasos, notas y bloqueadores?
-- ¿Quién puede administrar videos y métricas?
-- ¿Qué operaciones se reservan a procesos server-side?
+La política es de acceso compartido entre usuarios autenticados; solo es aceptable para el demo interno con registro público desactivado y cuentas manuales. No usar en un SaaS multi-tenant.
 
-El modelo debe aplicarse tanto en rutas/handlers de servidor como en RLS. Ocultar botones o proteger solo el frontend no constituye autorización.
+**No ejecutar todavía:** primero inspeccionar el esquema, privilegios y policies reales. No ejecutar `schema.sql` sobre una base existente. No modificar datos reales.
 
-## Migraciones
+## Secuencia de validación
 
-`schema.sql` es un esquema base para una instalación nueva. No ejecutarlo sobre una base existente sin inspeccionar primero tablas, columnas, constraints, índices, policies y datos. Preparar una migración incremental con respaldo y plan de reversión.
+1. Confirmar proyecto, organización y responsables.
+2. Verificar variables Preview (URL y publishable key).
+3. Desactivar registro público y provisionar una cuenta interna de prueba.
+4. Inspeccionar tablas, grants y policies en las cinco tablas.
+5. Revisar la migración y aplicarla solo si el estado real coincide con sus precondiciones.
+6. Probar acceso anónimo rechazado, login válido, logout, refresh y acceso directo a rutas.
+7. Probar lectura/escritura autenticada y rechazo con rol anon.
+8. Usar únicamente fixtures ficticios y visibles como demo.
 
-## Criterios para habilitar el PMV
+## Criterios de aceptación
 
-- [ ] Proyecto Supabase identificado y accesible.
-- [ ] URL y clave pública verificadas y presentes en Preview.
-- [ ] Deployment Preview creado después de configurar variables.
-- [ ] Login/logout implementado y probado con usuarios reales.
-- [ ] Roles y propiedad de clientes aprobados.
-- [ ] RLS probado con usuarios de distintos roles y clientes.
-- [ ] Rutas y operaciones servidor-side autorizadas.
-- [ ] Migraciones verificadas sobre el esquema real.
-- [ ] Alta de cliente y creación idempotente de 20 pasos probadas.
-- [ ] QA funcional y visual completado sin datos demo.
+- [x] Login/logout implementados en código.
+- [x] Middleware de protección compilado en `src/middleware.ts`.
+- [x] Rutas privadas redirigen a login en smoke test local sin Supabase.
+- [ ] Variables Supabase Preview verificadas en el deployment final.
+- [ ] Registro público desactivado.
+- [ ] Cuenta interna provisionada.
+- [ ] Policies reales inspeccionadas y migración validada.
+- [ ] QA remoto autenticado y no autenticado completado.
+- [ ] QA visual desktop/mobile completado.
 
-Hasta cumplir estos puntos, el backend permanece BLOCKED y el PMV no está validado.
+Hasta cumplir los pendientes, el backend no debe considerarse operativo con datos reales.
