@@ -61,6 +61,7 @@ export default function Header() {
             {isAuthenticated ? (
               <>
                 <Link href="/dashboard" className="text-pxsol-gray hover:text-pxsol-dark font-medium text-sm">Dashboard</Link>
+                <Link href="/content" className="text-pxsol-gray hover:text-pxsol-dark font-medium text-sm">Contenidos</Link>
                 <button type="button" onClick={handleSignOut} disabled={isSigningOut} className="inline-flex items-center gap-2 text-sm font-medium text-pxsol-gray hover:text-pxsol-dark disabled:opacity-50">
                   <LogOut size={16} />{isSigningOut ? 'Cerrando…' : 'Cerrar sesión'}
                 </button>
@@ -80,6 +81,7 @@ export default function Header() {
             {isAuthenticated ? (
               <>
                 <Link href="/dashboard" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded">Dashboard</Link>
+                <Link href="/content" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded">Contenidos</Link>
                 <button type="button" onClick={() => { setIsOpen(false); void handleSignOut() }} disabled={isSigningOut} className="block w-full text-left px-4 py-2 text-pxsol-dark hover:bg-pxsol-light rounded">Cerrar sesión</button>
               </>
             ) : (
