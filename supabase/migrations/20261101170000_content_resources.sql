@@ -1,4 +1,5 @@
 -- Unified PXSOL content library. Apply only after reviewing the PR and confirming Storage is enabled.
+-- Existing buckets are never mutated by this migration. Audit any pre-existing bucket manually.
 begin;
 
 create table public.content_resources (
@@ -62,10 +63,7 @@ values (
     'application/vnd.openxmlformats-officedocument.presentationml.presentation'
   ]
 )
-on conflict (id) do update set
-  public = false,
-  file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+on conflict (id) do nothing;
 
 create policy pxsol_content_authenticated_select
   on storage.objects for select to authenticated
