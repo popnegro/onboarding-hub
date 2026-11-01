@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { ContentResource } from '@/lib/supabase'
 import ContentLibrary from '@/components/ContentLibrary'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ContentPage() {
   const supabase = await createClient()
   const { data, error } = await supabase
