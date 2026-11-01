@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const schema = readFileSync(new URL('../schema.sql', import.meta.url), 'utf8')
+const library = JSON.parse(readFileSync(new URL('../content/onboarding/pxsol-onboarding-es.v1.json', import.meta.url), 'utf8'))
 const migration = readFileSync(
   new URL('../supabase/migrations/20261031_internal_demo_access.sql', import.meta.url),
   'utf8',
@@ -24,6 +25,17 @@ test('initial migration creates all application tables before applying access po
   assert.ok(migration.toUpperCase().indexOf('CREATE TABLE PUBLIC.VIDEOS') < migration.toUpperCase().indexOf('CREATE POLICY'))
   assert.match(migration, /REVOKE ALL ON TABLE[\s\S]+FROM anon/i)
   assert.match(migration, /GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE[\s\S]+TO authenticated/i)
+})
+
+test('seeds one clearly fictional client and all 20 approved editorial steps idempotently', () => {
+  assert.ok(migration.includes('HOTEL DEMO PXSOL — DATOS FICTICIOS'))
+  assert.ok(migration.includes('demo@pxsol.invalid'))
+  assert.ok(migration.includes('00000000-0000-4000-8000-000000000001'))
+  assert.match(migration, /ON CONFLICT \\(client_id, step_number\\) DO NOTHING/i)
+  const seedValues = migration.split('cross join (values')[1]?.split(') as demo_steps')[0] ?? ''
+  const seededTitles = [...seedValues.matchAll(/\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*'((?:[^']|'')*)'\\s*\\)/g)]
+    .map((match) => match[1].replaceAll("''", "'"))
+  assert.deepEqual(seededTitles, library.videos.map((video) => video.title))
 })
 
 test('reference schema keeps default-deny posture until the internal access migration is applied', () => {
